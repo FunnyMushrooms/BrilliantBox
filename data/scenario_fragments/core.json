@@ -3,71 +3,45 @@
     "start": {
       "id": "start",
       "type": "hub",
-      "title": "SOC Briefing",
-      "text": "Fictional incident drill: ransomware operators are staging in multiple segments. Pick where to investigate next.",
-      "commandPreview": "soc-playbook --incident cartoon-ransom --mode guided",
+      "title": "SOC Command Bridge",
+      "text": "Four network segments are active. Time runs continuously while you pivot. Actions do not consume timer budget: investigate as much as possible before countdown ends.",
+      "commandPreview": "soc-bridge --mode cross-segment --timer realtime",
       "options": [
-        {
-          "label": "Go to Provider Network",
-          "next": "hub_provider",
-          "timeCostSec": 20
-        },
-        {
-          "label": "Go to Corporate IT",
-          "next": "hub_corp",
-          "timeCostSec": 20
-        },
-        {
-          "label": "Go to ICS / OT",
-          "next": "hub_ot",
-          "timeCostSec": 20
-        },
-        {
-          "label": "Go to DroneOps Lab",
-          "next": "hub_drone",
-          "timeCostSec": 20
-        },
-        {
-          "label": "Run final assessment",
-          "next": "final_assess",
-          "timeCostSec": 15
-        }
+        { "label": "Open Domain / Public Services", "next": "hub_provider", "timeCostSec": 10 },
+        { "label": "Open Corporate Domain", "next": "hub_corp", "timeCostSec": 10 },
+        { "label": "Open ICS / Power Grid", "next": "hub_ot", "timeCostSec": 10 },
+        { "label": "Open Military UAV Network", "next": "hub_drone", "timeCostSec": 10 },
+        { "label": "Run full cyber kill-chain assessment", "next": "final_assess", "timeCostSec": 10 }
       ]
     },
     "final_assess": {
       "id": "final_assess",
       "type": "choice",
-      "title": "Final Assessment",
-      "text": "Choose your final defensive move for this simulation run.",
-      "commandPreview": "response-orchestrator --detonation-watch --dry-run",
+      "title": "Full Kill-Chain Review",
+      "text": "Hidden kill-chain slots open as you collect malware/IOC evidence from machines. Decide whether to execute coordinated containment.",
+      "commandPreview": "killchain-review --phase recon-to-impact --show-hidden",
       "options": [
         {
-          "label": "Coordinate containment + stop detonation",
+          "label": "Execute coordinated containment",
           "next": "win_node",
-          "timeCostSec": 40,
+          "timeCostSec": 10,
+          "conditions": { "requiredFlags": { "ransomwareContained": true } },
           "effects": {
-            "scoreDelta": 120,
-            "setFlags": {
-              "stoppedDetonation": true
-            }
+            "scoreDelta": 160,
+            "setFlags": { "stoppedDetonation": true }
           }
         },
         {
-          "label": "Continue hunting cross-network infections",
+          "label": "Continue evidence hunt",
           "next": "start",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": 15
-          }
+          "timeCostSec": 10,
+          "effects": { "scoreDelta": 12 }
         },
         {
-          "label": "Unsafe OT isolation shortcut",
+          "label": "Attempt rushed shutdown",
           "next": "end_node",
-          "timeCostSec": 30,
-          "effects": {
-            "scoreDelta": -80,
-            "otRiskDelta": 3
-          }
+          "timeCostSec": 10,
+          "effects": { "scoreDelta": -120, "otRiskDelta": 3 }
         }
       ]
     },
@@ -75,14 +49,14 @@
       "id": "win_node",
       "type": "win",
       "title": "Containment Complete",
-      "text": "You contained spread and interrupted the fictional detonation path.",
+      "text": "You mapped all four networks, protected critical files from deletion, and synchronized containment across domain, ICS, UAV, and public services.",
       "options": []
     },
     "end_node": {
       "id": "end_node",
       "type": "end",
       "title": "Exercise Terminated",
-      "text": "Risky action caused unacceptable simulated impact.",
+      "text": "The rushed action caused cascading disruption before evidence collection was complete.",
       "options": []
     }
   }

@@ -32,3 +32,13 @@
   - Added action buttons (Analyze, Quarantine, Eradicate) with time/score/noise consequences.
 - Extended engine state/reporting with malware sightings and interaction handling.
 - Re-checked Dental image intent from prompt context and kept alignment on clear visual actions + card interactions in web flow; telegram-specific flow still to be mapped if a formal in-repo asset/spec is provided.
+
+## Iteration 5
+- Implemented a full four-network mission map with direct machine-click navigation from the visual SVG map (Domain/Public, Corporate Domain, ICS/Power Grid, Military UAV).
+- Reauthored scenario fragments around machine-specific roles/tasks so each machine has unique purpose and investigation flow.
+- Added explicit routing-service collapse outcomes in provider/corp/ot/drone machine decisions when firewall routing is blocked.
+- Updated host catalog to match scenario machines with unique `role` + `description` metadata (including HR workstation constraints and file-focused investigations).
+- Changed timer behavior to run independently in real time via a global tick; player actions and malware interactions no longer consume timer budget.
+- Added cyber kill-chain sidebar panel with hidden stages that unlock through IOC/malware discovery and malware-card actions (analyze/eradicate).
+- Expanded narrative outcomes for ransomware file-deletion prevention, compromised users, malicious config changes, UAV-in-flight disruption, ICS power/light disruption, and unavailable public sources.
+- Checked prompt-provided Dental image context and kept alignment around clickable web interaction flow; exact Telegram-specific pathing remains open for follow-up mapping discussion if a formal in-repo spec is added.

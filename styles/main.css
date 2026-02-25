@@ -19,7 +19,7 @@ body {
 .app {
   display: grid;
   gap: 14px;
-  grid-template-columns: 300px 1fr 360px;
+  grid-template-columns: 320px 1fr 360px;
   grid-template-rows: auto 1fr;
   min-height: calc(100vh - 88px);
   padding: 14px;
@@ -39,7 +39,9 @@ select { background: #11213f; color: #fff; border: 1px solid #5578bf; border-rad
 label { display: grid; gap: 4px; }
 progress { width: 100%; }
 .network-map { display: grid; place-items: center; margin-bottom: 10px; }
-.subnet-svg { width: 100%; max-width: 280px; border-radius: 12px; background: #0d1730; border: 1px solid #355593; padding: 4px; }
+.subnet-svg { width: 100%; max-width: 320px; border-radius: 12px; background: #0d1730; border: 1px solid #355593; padding: 4px; }
+.full-map .map-machine { cursor: pointer; }
+.full-map .map-machine:hover rect { stroke: #8ed3ff; }
 
 .choices { display: grid; gap: 12px; margin-top: 10px; }
 .choice-btn {
@@ -65,6 +67,7 @@ progress { width: 100%; }
 .context-chip { display: inline-flex; margin-right: 8px; margin-top: 4px; border-radius: 999px; border: 1px solid var(--chip, #5e84d0); padding: 2px 8px; background: rgba(123, 166, 255, .12); font-size: .82rem; }
 .dark-brief { margin: 8px 0 4px; color: #ffcfa7; }
 .fun-brief { margin: 4px 0; color: #a7f9d4; }
+.machine-brief { margin: 6px 0; color: #d9e8ff; }
 
 .cmd { background: #0f1730; border: 1px dashed #4364a4; border-radius: 10px; padding: 8px; font-family: ui-monospace, Menlo, monospace; min-height: 56px; }
 .host-list { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -80,6 +83,11 @@ progress { width: 100%; }
 .status.eradicated { color: #c1ffc5; border-color: #8ef79d; }
 .malware-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .malware-actions button { padding: 4px 8px; font-size: .78rem; border-radius: 8px; }
+
+.kill-chain { margin: 8px 0 10px; padding-left: 18px; display: grid; gap: 4px; }
+.kill-step { font-size: .8rem; }
+.kill-step.locked { color: #859fca; }
+.kill-step.unlocked { color: #b4ffd2; }
 
 .dev-map { margin-top: 8px; background: #11162b; padding: 8px; border-radius: 8px; font-size: .9rem; }
 .hidden { display: none; }

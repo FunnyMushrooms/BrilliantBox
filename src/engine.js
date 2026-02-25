@@ -23,6 +23,10 @@ export class GameEngine {
       inventory: [],
       foundHosts: [],
       unlockedActions: [],
+      killChain: {
+        stages: ['recon', 'weaponization', 'delivery', 'exploitation', 'installation', 'command-and-control', 'actions-on-objectives'],
+        revealed: []
+      },
       malwareSightings: {},
       flags: { stoppedDetonation: false },
       sessionEnded: false,
@@ -53,14 +57,18 @@ export class GameEngine {
     const option = this.getAvailableOptions()[index];
     if (!option) return;
     const effects = option.effects || {};
-    this.consumeTime(option.timeCostSec || 0);
     this.state.score += effects.scoreDelta || 0;
     this.state.noise = Math.min(10, Math.max(0, this.state.noise + (effects.noiseDelta || 0)));
     this.state.otRisk = Math.min(10, Math.max(0, this.state.otRisk + (effects.otRiskDelta || 0)));
 
     for (const [k, v] of Object.entries(effects.setFlags || {})) this.state.flags[k] = v;
     for (const item of effects.addItems || []) if (!this.state.inventory.includes(item)) this.state.inventory.push(item);
-    for (const action of effects.unlockActions || []) if (!this.state.unlockedActions.includes(action)) this.state.unlockedActions.push(action);
+    for (const action of effects.unlockActions || []) {
+      if (!this.state.unlockedActions.includes(action)) this.state.unlockedActions.push(action);
+      if (this.state.killChain.stages.includes(action) && !this.state.killChain.revealed.includes(action)) {
+        this.state.killChain.revealed.push(action);
+      }
+    }
     if (effects.lockoutNetwork) this.state.access[effects.lockoutNetwork] = false;
 
     for (const hostId of effects.addFoundHosts || []) this.discoverHost(hostId);
@@ -121,14 +129,13 @@ export class GameEngine {
     if (!sighting || sighting.status === 'eradicated') return;
 
     if (action === 'analyze') {
-      this.consumeTime(15);
       this.state.score += 18;
+      this.revealNextKillChainStage();
       this.state.effectMessage = `Reverse engineering notes updated for ${hostId}.`;
       return;
     }
 
     if (action === 'quarantine') {
-      this.consumeTime(25);
       sighting.status = 'contained';
       this.state.score += 25;
       this.state.effectMessage = `${hostId} isolated. Malware can no longer spread from this host.`;
@@ -136,7 +143,6 @@ export class GameEngine {
     }
 
     if (action === 'eradicate') {
-      this.consumeTime(30);
       if (sighting.status !== 'contained') {
         this.state.noise = Math.min(10, this.state.noise + 1);
         this.state.score -= 8;
@@ -145,8 +151,19 @@ export class GameEngine {
       }
       sighting.status = 'eradicated';
       this.state.score += 35;
+      this.revealNextKillChainStage();
       this.state.effectMessage = `Malware eradicated on ${hostId}.`;
     }
+  }
+
+  revealNextKillChainStage() {
+    const next = this.state.killChain.stages.find((stage) => !this.state.killChain.revealed.includes(stage));
+    if (next) this.state.killChain.revealed.push(next);
+  }
+
+  tick(seconds = 1) {
+    if (this.state.sessionEnded) return;
+    this.consumeTime(seconds);
   }
 
   consumeTime(seconds) {
