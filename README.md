@@ -12,7 +12,7 @@ python -m http.server 8080
 1. Push this repository.
 2. In **Settings → Pages**, choose branch root (`/`).
 3. Entry point is `index.html` in repo root.
-4. Open `https://USER.github.io/incident-cartoon-defender/`.
+4. Open `https://funnymushrooms.github.io/BrilliantBox/`.
 
 ## Subpath safety
 All imports/requests use relative paths (`./src/...`, `./data/...`) so deployment under repository subpaths works.
