@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Incident Cartoon Defender</title>
+    <link rel="stylesheet" href="./styles/main.css" />
+  </head>
+  <body>
+    <div id="app" class="app">
+      <header class="panel header">
+        <h1>Incident Cartoon Defender</h1>
+        <div class="status-row">
+          <div><strong>Seed:</strong> <span id="seedValue">-</span></div>
+          <div><strong>Timer:</strong> <span id="timerValue">10:00</span></div>
+          <div><strong>Score:</strong> <span id="scoreValue">0</span></div>
+        </div>
+        <div class="meters">
+          <label>Noise <progress id="noiseMeter" max="10" value="0"></progress><span id="noiseValue">0/10</span></label>
+          <label>OT Risk <progress id="otMeter" max="10" value="0"></progress><span id="otValue">0/10</span></label>
+        </div>
+      </header>
+
+      <aside class="panel left">
+        <h2>Network Map</h2>
+        <div id="networkMap" class="network-map"></div>
+        <button id="toggleMapBtn" type="button">Toggle Dev Map</button>
+        <div id="devMap" class="dev-map hidden"></div>
+      </aside>
+
+      <main class="panel center">
+        <h2 id="nodeTitle">Story</h2>
+        <p id="nodeText"></p>
+        <div id="effectsText" class="effects"></div>
+        <div id="choices" class="choices" role="listbox" aria-label="Available actions"></div>
+      </main>
+
+      <aside class="panel right">
+        <h2>Intel / Inventory</h2>
+        <div id="inventory"></div>
+        <h3>Command Builder</h3>
+        <div id="commandBuilder" class="cmd"></div>
+        <h3>Leaderboard</h3>
+        <ol id="leaderboard"></ol>
+      </aside>
+    </div>
+
+    <footer class="panel footer">
+      <button id="newSeedBtn" type="button">Replay with new seed</button>
+      <button id="sameSeedBtn" type="button">Replay same seed</button>
+      <button id="exportBtn" type="button">Export run report</button>
+    </footer>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

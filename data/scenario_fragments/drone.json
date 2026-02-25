@@ -1,0 +1,884 @@
+{
+  "nodes": {
+    "hub_drone": {
+      "id": "hub_drone",
+      "type": "hub",
+      "title": "DroneOps / Secure Lab Hub",
+      "text": "Defensive triage options for DroneOps / Secure Lab.",
+      "commandPreview": "network-panel --segment drone --view queue",
+      "options": [
+        {
+          "label": "DroneOps / Secure Lab: build server artifact triage",
+          "next": "drone_c1",
+          "timeCostSec": 20,
+          "effects": {
+            "network": "drone"
+          }
+        },
+        {
+          "label": "DroneOps / Secure Lab: sim flight logs review",
+          "next": "drone_c2",
+          "timeCostSec": 30,
+          "effects": {
+            "network": "drone"
+          }
+        },
+        {
+          "label": "DroneOps / Secure Lab: secure vault access drift",
+          "next": "drone_c3",
+          "timeCostSec": 40,
+          "effects": {
+            "network": "drone"
+          }
+        },
+        {
+          "label": "DroneOps / Secure Lab: lab endpoint EDR sweep",
+          "next": "drone_c4",
+          "timeCostSec": 10,
+          "effects": {
+            "network": "drone"
+          }
+        },
+        {
+          "label": "DroneOps / Secure Lab: telemetry broker queue check",
+          "next": "drone_c5",
+          "timeCostSec": 20,
+          "effects": {
+            "network": "drone"
+          }
+        },
+        {
+          "label": "DroneOps / Secure Lab: firmware signing trail",
+          "next": "drone_c6",
+          "timeCostSec": 30,
+          "effects": {
+            "network": "drone"
+          }
+        },
+        {
+          "label": "DroneOps / Secure Lab: research share exfil pattern",
+          "next": "drone_c7",
+          "timeCostSec": 40,
+          "effects": {
+            "network": "drone"
+          }
+        },
+        {
+          "label": "DroneOps / Secure Lab: command link replay scan",
+          "next": "drone_c8",
+          "timeCostSec": 10,
+          "effects": {
+            "network": "drone"
+          }
+        },
+        {
+          "label": "Back to SOC overview",
+          "next": "start",
+          "timeCostSec": 10
+        }
+      ]
+    },
+    "drone_c1": {
+      "id": "drone_c1",
+      "type": "choice",
+      "title": "DroneOps / Secure Lab Decision 1",
+      "text": "Simulation choice: select a defensive tool profile for \"build server artifact triage\".",
+      "commandPreview": "triage-tool --segment drone --task 1 --profile guided",
+      "options": [
+        {
+          "label": "Targeted profile (balanced)",
+          "next": "drone_r1",
+          "timeCostSec": 20,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": 12,
+            "noiseDelta": 0
+          },
+          "effectText": "Useful telemetry gathered with manageable exposure."
+        },
+        {
+          "label": "Aggressive full sweep",
+          "next": "drone_f1",
+          "timeCostSec": 30,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": -12,
+            "noiseDelta": 2,
+            "otRiskDelta": 0
+          },
+          "effectText": "Coverage improved, but monitoring systems noticed."
+        },
+        {
+          "label": "Stealth log query",
+          "next": "hub_drone",
+          "timeCostSec": 15,
+          "conditions": {},
+          "effects": {
+            "scoreDelta": 5,
+            "network": "drone"
+          },
+          "effectText": "Low-noise context gathered, no immediate host confirmation."
+        }
+      ]
+    },
+    "drone_r1": {
+      "id": "drone_r1",
+      "type": "result",
+      "title": "DroneOps / Secure Lab Result 1",
+      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
+      "commandPreview": "edr-query --template IOC-lite --scope segment",
+      "options": [
+        {
+          "label": "Return to network hub",
+          "next": "hub_drone",
+          "timeCostSec": 10,
+          "effects": {
+            "scoreDelta": 14,
+            "network": "drone",
+            "addItems": [
+              "sandbox-artifact"
+            ]
+          }
+        },
+        {
+          "label": "Escalate to final assessment",
+          "next": "final_assess",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": 10
+          }
+        }
+      ]
+    },
+    "drone_f1": {
+      "id": "drone_f1",
+      "type": "fail_soft",
+      "title": "DroneOps / Secure Lab Soft Failure 1",
+      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
+      "commandPreview": "incident-notes --tag soft-fail --review",
+      "options": [
+        {
+          "label": "Recover and continue in this segment",
+          "next": "hub_drone",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": -6,
+            "noiseDelta": 1,
+            "network": "drone"
+          }
+        },
+        {
+          "label": "Pivot to SOC overview",
+          "next": "start",
+          "timeCostSec": 15,
+          "effects": {
+            "scoreDelta": 0
+          }
+        }
+      ]
+    },
+    "drone_c2": {
+      "id": "drone_c2",
+      "type": "choice",
+      "title": "DroneOps / Secure Lab Decision 2",
+      "text": "Simulation choice: select a defensive tool profile for \"sim flight logs review\".",
+      "commandPreview": "triage-tool --segment drone --task 2 --profile guided",
+      "options": [
+        {
+          "label": "Targeted profile (balanced)",
+          "next": "drone_r2",
+          "timeCostSec": 20,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": 16,
+            "noiseDelta": 0,
+            "rollFromNetwork": "drone",
+            "maxFind": 2
+          },
+          "effectText": "Useful telemetry gathered with manageable exposure."
+        },
+        {
+          "label": "Aggressive full sweep",
+          "next": "drone_f2",
+          "timeCostSec": 30,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": -12,
+            "noiseDelta": 2,
+            "otRiskDelta": 0
+          },
+          "effectText": "Coverage improved, but monitoring systems noticed."
+        },
+        {
+          "label": "Stealth log query",
+          "next": "hub_drone",
+          "timeCostSec": 15,
+          "conditions": {},
+          "effects": {
+            "scoreDelta": 5,
+            "network": "drone"
+          },
+          "effectText": "Low-noise context gathered, no immediate host confirmation."
+        }
+      ]
+    },
+    "drone_r2": {
+      "id": "drone_r2",
+      "type": "result",
+      "title": "DroneOps / Secure Lab Result 2",
+      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
+      "commandPreview": "edr-query --template IOC-lite --scope segment",
+      "options": [
+        {
+          "label": "Return to network hub",
+          "next": "hub_drone",
+          "timeCostSec": 10,
+          "effects": {
+            "scoreDelta": 14,
+            "network": "drone",
+            "rollFromNetwork": "drone",
+            "maxFind": 2
+          }
+        },
+        {
+          "label": "Escalate to final assessment",
+          "next": "final_assess",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": 10
+          }
+        }
+      ]
+    },
+    "drone_f2": {
+      "id": "drone_f2",
+      "type": "fail_soft",
+      "title": "DroneOps / Secure Lab Soft Failure 2",
+      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
+      "commandPreview": "incident-notes --tag soft-fail --review",
+      "options": [
+        {
+          "label": "Recover and continue in this segment",
+          "next": "hub_drone",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": -6,
+            "noiseDelta": 1,
+            "network": "drone"
+          }
+        },
+        {
+          "label": "Pivot to SOC overview",
+          "next": "start",
+          "timeCostSec": 15,
+          "effects": {
+            "scoreDelta": 0
+          }
+        }
+      ]
+    },
+    "drone_c3": {
+      "id": "drone_c3",
+      "type": "choice",
+      "title": "DroneOps / Secure Lab Decision 3",
+      "text": "Simulation choice: select a defensive tool profile for \"secure vault access drift\".",
+      "commandPreview": "triage-tool --segment drone --task 3 --profile guided",
+      "options": [
+        {
+          "label": "Targeted profile (balanced)",
+          "next": "drone_r3",
+          "timeCostSec": 20,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": 8,
+            "noiseDelta": 0,
+            "addItems": [
+              "drone-ioc-fragment"
+            ]
+          },
+          "effectText": "Useful telemetry gathered with manageable exposure."
+        },
+        {
+          "label": "Aggressive full sweep",
+          "next": "drone_f3",
+          "timeCostSec": 30,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": -12,
+            "noiseDelta": 2,
+            "otRiskDelta": 0
+          },
+          "effectText": "Coverage improved, but monitoring systems noticed."
+        },
+        {
+          "label": "Stealth log query",
+          "next": "hub_drone",
+          "timeCostSec": 15,
+          "conditions": {},
+          "effects": {
+            "scoreDelta": 5,
+            "network": "drone"
+          },
+          "effectText": "Low-noise context gathered, no immediate host confirmation."
+        }
+      ]
+    },
+    "drone_r3": {
+      "id": "drone_r3",
+      "type": "result",
+      "title": "DroneOps / Secure Lab Result 3",
+      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
+      "commandPreview": "edr-query --template IOC-lite --scope segment",
+      "options": [
+        {
+          "label": "Return to network hub",
+          "next": "hub_drone",
+          "timeCostSec": 10,
+          "effects": {
+            "scoreDelta": 14,
+            "network": "drone"
+          }
+        },
+        {
+          "label": "Escalate to final assessment",
+          "next": "final_assess",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": 10
+          }
+        }
+      ]
+    },
+    "drone_f3": {
+      "id": "drone_f3",
+      "type": "fail_soft",
+      "title": "DroneOps / Secure Lab Soft Failure 3",
+      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
+      "commandPreview": "incident-notes --tag soft-fail --review",
+      "options": [
+        {
+          "label": "Recover and continue in this segment",
+          "next": "hub_drone",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": -6,
+            "noiseDelta": 1,
+            "network": "drone"
+          }
+        },
+        {
+          "label": "Pivot to SOC overview",
+          "next": "start",
+          "timeCostSec": 15,
+          "effects": {
+            "scoreDelta": 0
+          }
+        }
+      ]
+    },
+    "drone_c4": {
+      "id": "drone_c4",
+      "type": "choice",
+      "title": "DroneOps / Secure Lab Decision 4",
+      "text": "Simulation choice: select a defensive tool profile for \"lab endpoint EDR sweep\".",
+      "commandPreview": "triage-tool --segment drone --task 4 --profile guided",
+      "options": [
+        {
+          "label": "Targeted profile (balanced)",
+          "next": "drone_r4",
+          "timeCostSec": 20,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": 12,
+            "noiseDelta": 1
+          },
+          "effectText": "Useful telemetry gathered with manageable exposure."
+        },
+        {
+          "label": "Aggressive full sweep",
+          "next": "drone_f4",
+          "timeCostSec": 30,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": -12,
+            "noiseDelta": 2,
+            "otRiskDelta": 0
+          },
+          "effectText": "Coverage improved, but monitoring systems noticed."
+        },
+        {
+          "label": "Stealth log query",
+          "next": "hub_drone",
+          "timeCostSec": 15,
+          "conditions": {},
+          "effects": {
+            "scoreDelta": 5,
+            "network": "drone"
+          },
+          "effectText": "Low-noise context gathered, no immediate host confirmation."
+        }
+      ]
+    },
+    "drone_r4": {
+      "id": "drone_r4",
+      "type": "result",
+      "title": "DroneOps / Secure Lab Result 4",
+      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
+      "commandPreview": "edr-query --template IOC-lite --scope segment",
+      "options": [
+        {
+          "label": "Return to network hub",
+          "next": "hub_drone",
+          "timeCostSec": 10,
+          "effects": {
+            "scoreDelta": 14,
+            "network": "drone",
+            "addItems": [
+              "containment-template"
+            ]
+          }
+        },
+        {
+          "label": "Escalate to final assessment",
+          "next": "final_assess",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": 10
+          }
+        }
+      ]
+    },
+    "drone_f4": {
+      "id": "drone_f4",
+      "type": "fail_soft",
+      "title": "DroneOps / Secure Lab Soft Failure 4",
+      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
+      "commandPreview": "incident-notes --tag soft-fail --review",
+      "options": [
+        {
+          "label": "Recover and continue in this segment",
+          "next": "hub_drone",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": -6,
+            "noiseDelta": 1,
+            "network": "drone",
+            "lockoutNetwork": "drone"
+          }
+        },
+        {
+          "label": "Pivot to SOC overview",
+          "next": "start",
+          "timeCostSec": 15,
+          "effects": {
+            "scoreDelta": 0
+          }
+        }
+      ]
+    },
+    "drone_c5": {
+      "id": "drone_c5",
+      "type": "choice",
+      "title": "DroneOps / Secure Lab Decision 5",
+      "text": "Simulation choice: select a defensive tool profile for \"telemetry broker queue check\".",
+      "commandPreview": "triage-tool --segment drone --task 5 --profile guided",
+      "options": [
+        {
+          "label": "Targeted profile (balanced)",
+          "next": "drone_r5",
+          "timeCostSec": 20,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": 16,
+            "noiseDelta": 0,
+            "rollFromNetwork": "drone",
+            "maxFind": 2
+          },
+          "effectText": "Useful telemetry gathered with manageable exposure."
+        },
+        {
+          "label": "Aggressive full sweep",
+          "next": "drone_f5",
+          "timeCostSec": 30,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": -12,
+            "noiseDelta": 2,
+            "otRiskDelta": 0
+          },
+          "effectText": "Coverage improved, but monitoring systems noticed."
+        },
+        {
+          "label": "Stealth log query",
+          "next": "hub_drone",
+          "timeCostSec": 15,
+          "conditions": {},
+          "effects": {
+            "scoreDelta": 5,
+            "network": "drone"
+          },
+          "effectText": "Low-noise context gathered, no immediate host confirmation."
+        }
+      ]
+    },
+    "drone_r5": {
+      "id": "drone_r5",
+      "type": "result",
+      "title": "DroneOps / Secure Lab Result 5",
+      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
+      "commandPreview": "edr-query --template IOC-lite --scope segment",
+      "options": [
+        {
+          "label": "Return to network hub",
+          "next": "hub_drone",
+          "timeCostSec": 10,
+          "effects": {
+            "scoreDelta": 14,
+            "network": "drone",
+            "rollFromNetwork": "drone",
+            "maxFind": 2
+          }
+        },
+        {
+          "label": "Escalate to final assessment",
+          "next": "final_assess",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": 10
+          }
+        }
+      ]
+    },
+    "drone_f5": {
+      "id": "drone_f5",
+      "type": "fail_soft",
+      "title": "DroneOps / Secure Lab Soft Failure 5",
+      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
+      "commandPreview": "incident-notes --tag soft-fail --review",
+      "options": [
+        {
+          "label": "Recover and continue in this segment",
+          "next": "hub_drone",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": -6,
+            "noiseDelta": 1,
+            "network": "drone"
+          }
+        },
+        {
+          "label": "Pivot to SOC overview",
+          "next": "start",
+          "timeCostSec": 15,
+          "effects": {
+            "scoreDelta": 0
+          }
+        }
+      ]
+    },
+    "drone_c6": {
+      "id": "drone_c6",
+      "type": "choice",
+      "title": "DroneOps / Secure Lab Decision 6",
+      "text": "Simulation choice: select a defensive tool profile for \"firmware signing trail\".",
+      "commandPreview": "triage-tool --segment drone --task 6 --profile guided",
+      "options": [
+        {
+          "label": "Targeted profile (balanced)",
+          "next": "drone_r6",
+          "timeCostSec": 20,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": 8,
+            "noiseDelta": 0,
+            "unlockActions": [
+              "hunt-template"
+            ]
+          },
+          "effectText": "Useful telemetry gathered with manageable exposure."
+        },
+        {
+          "label": "Aggressive full sweep",
+          "next": "drone_f6",
+          "timeCostSec": 30,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": -12,
+            "noiseDelta": 2,
+            "otRiskDelta": 0
+          },
+          "effectText": "Coverage improved, but monitoring systems noticed."
+        },
+        {
+          "label": "Stealth log query",
+          "next": "hub_drone",
+          "timeCostSec": 15,
+          "conditions": {},
+          "effects": {
+            "scoreDelta": 5,
+            "network": "drone"
+          },
+          "effectText": "Low-noise context gathered, no immediate host confirmation."
+        }
+      ]
+    },
+    "drone_r6": {
+      "id": "drone_r6",
+      "type": "result",
+      "title": "DroneOps / Secure Lab Result 6",
+      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
+      "commandPreview": "edr-query --template IOC-lite --scope segment",
+      "options": [
+        {
+          "label": "Return to network hub",
+          "next": "hub_drone",
+          "timeCostSec": 10,
+          "effects": {
+            "scoreDelta": 14,
+            "network": "drone"
+          }
+        },
+        {
+          "label": "Escalate to final assessment",
+          "next": "final_assess",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": 10
+          }
+        }
+      ]
+    },
+    "drone_f6": {
+      "id": "drone_f6",
+      "type": "fail_soft",
+      "title": "DroneOps / Secure Lab Soft Failure 6",
+      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
+      "commandPreview": "incident-notes --tag soft-fail --review",
+      "options": [
+        {
+          "label": "Recover and continue in this segment",
+          "next": "hub_drone",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": -6,
+            "noiseDelta": 1,
+            "network": "drone"
+          }
+        },
+        {
+          "label": "Pivot to SOC overview",
+          "next": "start",
+          "timeCostSec": 15,
+          "effects": {
+            "scoreDelta": 0
+          }
+        }
+      ]
+    },
+    "drone_c7": {
+      "id": "drone_c7",
+      "type": "choice",
+      "title": "DroneOps / Secure Lab Decision 7",
+      "text": "Simulation choice: select a defensive tool profile for \"research share exfil pattern\".",
+      "commandPreview": "triage-tool --segment drone --task 7 --profile guided",
+      "options": [
+        {
+          "label": "Targeted profile (balanced)",
+          "next": "drone_r7",
+          "timeCostSec": 20,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": 12,
+            "noiseDelta": 0,
+            "rollFromNetwork": "drone",
+            "maxFind": 2
+          },
+          "effectText": "Useful telemetry gathered with manageable exposure."
+        },
+        {
+          "label": "Aggressive full sweep",
+          "next": "drone_f7",
+          "timeCostSec": 30,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": -12,
+            "noiseDelta": 2,
+            "otRiskDelta": 0
+          },
+          "effectText": "Coverage improved, but monitoring systems noticed."
+        },
+        {
+          "label": "Stealth log query",
+          "next": "hub_drone",
+          "timeCostSec": 15,
+          "conditions": {
+            "requiredItems": [
+              "ioc-template"
+            ]
+          },
+          "effects": {
+            "scoreDelta": 5,
+            "network": "drone"
+          },
+          "effectText": "Low-noise context gathered, no immediate host confirmation."
+        }
+      ]
+    },
+    "drone_r7": {
+      "id": "drone_r7",
+      "type": "result",
+      "title": "DroneOps / Secure Lab Result 7",
+      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
+      "commandPreview": "edr-query --template IOC-lite --scope segment",
+      "options": [
+        {
+          "label": "Return to network hub",
+          "next": "hub_drone",
+          "timeCostSec": 10,
+          "effects": {
+            "scoreDelta": 14,
+            "network": "drone",
+            "rollFromNetwork": "drone",
+            "maxFind": 2
+          }
+        },
+        {
+          "label": "Escalate to final assessment",
+          "next": "final_assess",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": 10
+          }
+        }
+      ]
+    },
+    "drone_f7": {
+      "id": "drone_f7",
+      "type": "fail_soft",
+      "title": "DroneOps / Secure Lab Soft Failure 7",
+      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
+      "commandPreview": "incident-notes --tag soft-fail --review",
+      "options": [
+        {
+          "label": "Recover and continue in this segment",
+          "next": "hub_drone",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": -6,
+            "noiseDelta": 1,
+            "network": "drone"
+          }
+        },
+        {
+          "label": "Pivot to SOC overview",
+          "next": "start",
+          "timeCostSec": 15,
+          "effects": {
+            "scoreDelta": 0
+          }
+        }
+      ]
+    },
+    "drone_c8": {
+      "id": "drone_c8",
+      "type": "choice",
+      "title": "DroneOps / Secure Lab Decision 8",
+      "text": "Simulation choice: select a defensive tool profile for \"command link replay scan\".",
+      "commandPreview": "triage-tool --segment drone --task 8 --profile guided",
+      "options": [
+        {
+          "label": "Targeted profile (balanced)",
+          "next": "drone_r8",
+          "timeCostSec": 20,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": 16,
+            "noiseDelta": 1
+          },
+          "effectText": "Useful telemetry gathered with manageable exposure."
+        },
+        {
+          "label": "Aggressive full sweep",
+          "next": "drone_f8",
+          "timeCostSec": 30,
+          "effects": {
+            "network": "drone",
+            "scoreDelta": -12,
+            "noiseDelta": 2,
+            "otRiskDelta": 0
+          },
+          "effectText": "Coverage improved, but monitoring systems noticed."
+        },
+        {
+          "label": "Stealth log query",
+          "next": "hub_drone",
+          "timeCostSec": 15,
+          "conditions": {
+            "requiredItems": [
+              "ioc-template"
+            ]
+          },
+          "effects": {
+            "scoreDelta": 5,
+            "network": "drone"
+          },
+          "effectText": "Low-noise context gathered, no immediate host confirmation."
+        }
+      ]
+    },
+    "drone_r8": {
+      "id": "drone_r8",
+      "type": "result",
+      "title": "DroneOps / Secure Lab Result 8",
+      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
+      "commandPreview": "edr-query --template IOC-lite --scope segment",
+      "options": [
+        {
+          "label": "Return to network hub",
+          "next": "hub_drone",
+          "timeCostSec": 10,
+          "effects": {
+            "scoreDelta": 14,
+            "network": "drone"
+          }
+        },
+        {
+          "label": "Escalate to final assessment",
+          "next": "final_assess",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": 10
+          }
+        }
+      ]
+    },
+    "drone_f8": {
+      "id": "drone_f8",
+      "type": "fail_soft",
+      "title": "DroneOps / Secure Lab Soft Failure 8",
+      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
+      "commandPreview": "incident-notes --tag soft-fail --review",
+      "options": [
+        {
+          "label": "Recover and continue in this segment",
+          "next": "hub_drone",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": -6,
+            "noiseDelta": 1,
+            "network": "drone",
+            "lockoutNetwork": "drone"
+          }
+        },
+        {
+          "label": "Pivot to SOC overview",
+          "next": "start",
+          "timeCostSec": 15,
+          "effects": {
+            "scoreDelta": 0
+          }
+        }
+      ]
+    }
+  }
+}

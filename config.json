@@ -1,0 +1,6 @@
+{
+  "remoteLeaderboard": {
+    "enabled": false,
+    "endpoint": "https://example.workers.dev/leaderboard"
+  }
+}

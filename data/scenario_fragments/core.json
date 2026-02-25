@@ -1,0 +1,89 @@
+{
+  "nodes": {
+    "start": {
+      "id": "start",
+      "type": "hub",
+      "title": "SOC Briefing",
+      "text": "Fictional incident drill: ransomware operators are staging in multiple segments. Pick where to investigate next.",
+      "commandPreview": "soc-playbook --incident cartoon-ransom --mode guided",
+      "options": [
+        {
+          "label": "Go to Provider Network",
+          "next": "hub_provider",
+          "timeCostSec": 20
+        },
+        {
+          "label": "Go to Corporate IT",
+          "next": "hub_corp",
+          "timeCostSec": 20
+        },
+        {
+          "label": "Go to ICS / OT",
+          "next": "hub_ot",
+          "timeCostSec": 20
+        },
+        {
+          "label": "Go to DroneOps Lab",
+          "next": "hub_drone",
+          "timeCostSec": 20
+        },
+        {
+          "label": "Run final assessment",
+          "next": "final_assess",
+          "timeCostSec": 15
+        }
+      ]
+    },
+    "final_assess": {
+      "id": "final_assess",
+      "type": "choice",
+      "title": "Final Assessment",
+      "text": "Choose your final defensive move for this simulation run.",
+      "commandPreview": "response-orchestrator --detonation-watch --dry-run",
+      "options": [
+        {
+          "label": "Coordinate containment + stop detonation",
+          "next": "win_node",
+          "timeCostSec": 40,
+          "effects": {
+            "scoreDelta": 120,
+            "setFlags": {
+              "stoppedDetonation": true
+            }
+          }
+        },
+        {
+          "label": "Continue hunting cross-network infections",
+          "next": "start",
+          "timeCostSec": 20,
+          "effects": {
+            "scoreDelta": 15
+          }
+        },
+        {
+          "label": "Unsafe OT isolation shortcut",
+          "next": "end_node",
+          "timeCostSec": 30,
+          "effects": {
+            "scoreDelta": -80,
+            "otRiskDelta": 3
+          }
+        }
+      ]
+    },
+    "win_node": {
+      "id": "win_node",
+      "type": "win",
+      "title": "Containment Complete",
+      "text": "You contained spread and interrupted the fictional detonation path.",
+      "options": []
+    },
+    "end_node": {
+      "id": "end_node",
+      "type": "end",
+      "title": "Exercise Terminated",
+      "text": "Risky action caused unacceptable simulated impact.",
+      "options": []
+    }
+  }
+}
