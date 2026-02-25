@@ -1,0 +1,36 @@
+Project: incident-cartoon-defender
+
+Architecture:
+- Static SPA for GitHub Pages (`index.html` + relative module/data paths).
+- Data-driven scenario assembled from multiple JSON fragments to keep files small and maintainable.
+
+Main files:
+- index.html: shell layout (header, map, story, inventory, command builder, replay/export controls).
+- styles/main.css: cartoon dark-mode UI + responsive panel stacking.
+- src/main.js: boot/replay flow, leaderboard finalization, report export.
+- src/engine.js: state machine (timer, score, noise, OT risk, lockouts, host discovery, endings).
+- src/scenarioLoader.js: loads scenario manifest + fragments, host pool, config; applies deterministic seed.
+- src/ui.js: render and event wiring (buttons + keyboard shortcuts + dev map toggle).
+- src/scoring.js: score component formulas.
+- src/storage.js: local/session persistence wrappers.
+
+Scenario data:
+- data/scenario.json: manifest (`startNode`, `fragments`, `meta`).
+- data/scenario_fragments/core.json: SOC start/final/win/end nodes.
+- data/scenario_fragments/provider.json
+- data/scenario_fragments/corp.json
+- data/scenario_fragments/ot.json
+- data/scenario_fragments/drone.json
+- data/hostPool.json: host catalog with network/tags/infected eligibility/decoy flags.
+
+Validation + integrations:
+- tools/validate.mjs: validates merged scenario graph (refs, reachability, positive time costs, win path).
+- config.json: optional remote leaderboard configuration (disabled by default).
+- remote/worker.js: optional Cloudflare Worker endpoint example for remote scores.
+
+Data/API schema summary:
+- Node fields: id, type (hub|choice|result|fail_soft|win|end), title, text, commandPreview, options[]
+- Option fields: label, next, timeCostSec, effects?, conditions?
+- Effect fields: scoreDelta, noiseDelta, otRiskDelta, setFlags, addItems, addFoundHosts,
+  lockoutNetwork, unlockActions, rollFromNetwork, maxFind, network
+- Condition fields: requiredItems, requiredFlags, minNoise, maxNoise, networkAccessRequired

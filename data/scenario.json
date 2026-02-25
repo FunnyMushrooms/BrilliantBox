@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "name": "Incident Cartoon Defender",
+    "version": 2
+  },
+  "startNode": "start",
+  "fragments": [
+    "core",
+    "provider",
+    "corp",
+    "ot",
+    "drone"
+  ]
+}

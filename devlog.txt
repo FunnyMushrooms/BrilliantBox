@@ -1,0 +1,15 @@
+# Dev Log
+
+## Iteration 1
+- Built initial static GitHub Pages-compatible project scaffold.
+- Implemented core engine, scoring, storage, UI, scenario loader, data files, validator, and optional remote worker.
+- Added README and develop.txt documentation.
+- Note: `dental.png` was not found in repository at implementation time, so no direct flow cross-check could be performed.
+
+## Iteration 2
+- Refactored scenario content to avoid one oversized string-heavy file.
+- Introduced fragment-based scenario loading (`data/scenario.json` manifest + per-network files in `data/scenario_fragments/`).
+- Updated validator to validate merged fragments and preserved core checks (references, reachability, positive time costs, win path).
+- Updated docs (`README.md`, `develop.txt`) to explain modular scenario architecture and extension flow.
+- Re-checked for `dental.png`; still not present in repo, so comparison with that visual flow remains pending.
+- Discussion note: if `dental.png` is later provided, we should map its Telegram/web action flow against current node hubs and identify missing transitions.
