@@ -3,880 +3,105 @@
     "hub_corp": {
       "id": "hub_corp",
       "type": "hub",
-      "title": "Corporate IT Hub",
-      "text": "Defensive triage options for Corporate IT.",
-      "commandPreview": "network-panel --segment corp --view queue",
+      "title": "Corporate Domain",
+      "text": "Compromised user identities and ransomware behavior are reported. Every machine has a specific role; inspect real business files too.",
+      "commandPreview": "segment-open --network corp",
       "options": [
-        {
-          "label": "Corporate IT: AD auth spray detector review",
-          "next": "corp_c1",
-          "timeCostSec": 20,
-          "effects": {
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Corporate IT: file share entropy check",
-          "next": "corp_c2",
-          "timeCostSec": 30,
-          "effects": {
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Corporate IT: EDR process lineage hunt",
-          "next": "corp_c3",
-          "timeCostSec": 40,
-          "effects": {
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Corporate IT: domain trust audit",
-          "next": "corp_c4",
-          "timeCostSec": 10,
-          "effects": {
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Corporate IT: mailbox rule anomaly",
-          "next": "corp_c5",
-          "timeCostSec": 20,
-          "effects": {
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Corporate IT: VPN posture mismatch",
-          "next": "corp_c6",
-          "timeCostSec": 30,
-          "effects": {
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Corporate IT: backup catalog check",
-          "next": "corp_c7",
-          "timeCostSec": 40,
-          "effects": {
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Corporate IT: vdi session burst review",
-          "next": "corp_c8",
-          "timeCostSec": 10,
-          "effects": {
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Back to SOC overview",
-          "next": "start",
-          "timeCostSec": 10
-        }
+        { "label": "Machine: HR Workstation", "next": "corp_hr", "timeCostSec": 10, "effects": { "network": "corp" } },
+        { "label": "Machine: Domain Controller", "next": "corp_dc", "timeCostSec": 10, "effects": { "network": "corp" } },
+        { "label": "Machine: Finance File Server", "next": "corp_fs", "timeCostSec": 10, "effects": { "network": "corp" } },
+        { "label": "Return to SOC", "next": "start", "timeCostSec": 10 }
       ]
     },
-    "corp_c1": {
-      "id": "corp_c1",
+    "corp_hr": {
+      "id": "corp_hr",
       "type": "choice",
-      "title": "Corporate IT Decision 1",
-      "text": "Simulation choice: select a defensive tool profile for \"AD auth spray detector review\".",
-      "commandPreview": "triage-tool --segment corp --task 1 --profile guided",
+      "machineId": "corp-hr-01",
+      "title": "HR Workstation",
+      "text": "Role: HR payroll and onboarding tools workstation. Legitimate CV/PDF files must be reviewed; no network scanning tools are installed here.",
+      "commandPreview": "hr-endpoint-review --host corp-hr-01 --tooling local-only",
       "options": [
         {
-          "label": "Targeted profile (balanced)",
-          "next": "corp_r1",
-          "timeCostSec": 20,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": 12,
-            "noiseDelta": 0
-          },
-          "effectText": "Useful telemetry gathered with manageable exposure."
-        },
-        {
-          "label": "Aggressive full sweep",
-          "next": "corp_f1",
-          "timeCostSec": 30,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": -12,
-            "noiseDelta": 2,
-            "otRiskDelta": 0
-          },
-          "effectText": "Coverage improved, but monitoring systems noticed."
-        },
-        {
-          "label": "Stealth log query",
-          "next": "hub_corp",
-          "timeCostSec": 15,
-          "conditions": {},
-          "effects": {
-            "scoreDelta": 5,
-            "network": "corp"
-          },
-          "effectText": "Low-noise context gathered, no immediate host confirmation."
-        }
-      ]
-    },
-    "corp_r1": {
-      "id": "corp_r1",
-      "type": "result",
-      "title": "Corporate IT Result 1",
-      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
-      "commandPreview": "edr-query --template IOC-lite --scope segment",
-      "options": [
-        {
-          "label": "Return to network hub",
+          "label": "Review HR documents and startup entries",
           "next": "hub_corp",
           "timeCostSec": 10,
           "effects": {
-            "scoreDelta": 14,
-            "network": "corp",
-            "addItems": [
-              "sandbox-artifact"
-            ]
-          }
+            "scoreDelta": 32,
+            "addFoundHosts": ["corp-hr-01"],
+            "addItems": ["hr-phishing-lure"],
+            "unlockActions": ["installation"]
+          },
+          "effectText": "Found macro lure in a legitimate applicant file and linked user compromise."
         },
         {
-          "label": "Escalate to final assessment",
-          "next": "final_assess",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": 10
-          }
-        }
-      ]
-    },
-    "corp_f1": {
-      "id": "corp_f1",
-      "type": "fail_soft",
-      "title": "Corporate IT Soft Failure 1",
-      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
-      "commandPreview": "incident-notes --tag soft-fail --review",
-      "options": [
-        {
-          "label": "Recover and continue in this segment",
+          "label": "Force endpoint shutdown",
           "next": "hub_corp",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": -6,
-            "noiseDelta": 1,
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Pivot to SOC overview",
-          "next": "start",
-          "timeCostSec": 15,
-          "effects": {
-            "scoreDelta": 0
-          }
+          "timeCostSec": 10,
+          "effects": { "scoreDelta": -14, "noiseDelta": 1, "network": "corp" },
+          "effectText": "Host powered off abruptly; evidence collection became harder."
         }
       ]
     },
-    "corp_c2": {
-      "id": "corp_c2",
+    "corp_dc": {
+      "id": "corp_dc",
       "type": "choice",
-      "title": "Corporate IT Decision 2",
-      "text": "Simulation choice: select a defensive tool profile for \"file share entropy check\".",
-      "commandPreview": "triage-tool --segment corp --task 2 --profile guided",
+      "machineId": "corp-dc-01",
+      "title": "Domain Controller",
+      "text": "Role: identity authority. Multiple compromised users authenticated from unusual geos.",
+      "commandPreview": "ad-investigate --host corp-dc-01 --focus compromised-users",
       "options": [
         {
-          "label": "Targeted profile (balanced)",
-          "next": "corp_r2",
-          "timeCostSec": 20,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": 16,
-            "noiseDelta": 0,
-            "rollFromNetwork": "corp",
-            "maxFind": 2
-          },
-          "effectText": "Useful telemetry gathered with manageable exposure."
-        },
-        {
-          "label": "Aggressive full sweep",
-          "next": "corp_f2",
-          "timeCostSec": 30,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": -12,
-            "noiseDelta": 2,
-            "otRiskDelta": 0
-          },
-          "effectText": "Coverage improved, but monitoring systems noticed."
-        },
-        {
-          "label": "Stealth log query",
-          "next": "hub_corp",
-          "timeCostSec": 15,
-          "conditions": {},
-          "effects": {
-            "scoreDelta": 5,
-            "network": "corp"
-          },
-          "effectText": "Low-noise context gathered, no immediate host confirmation."
-        }
-      ]
-    },
-    "corp_r2": {
-      "id": "corp_r2",
-      "type": "result",
-      "title": "Corporate IT Result 2",
-      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
-      "commandPreview": "edr-query --template IOC-lite --scope segment",
-      "options": [
-        {
-          "label": "Return to network hub",
+          "label": "Inspect user logons and Kerberos abuse indicators",
           "next": "hub_corp",
           "timeCostSec": 10,
           "effects": {
-            "scoreDelta": 14,
-            "network": "corp",
-            "rollFromNetwork": "corp",
-            "maxFind": 2
-          }
+            "scoreDelta": 34,
+            "addFoundHosts": ["corp-dc-01"],
+            "addItems": ["compromised-users-list"],
+            "unlockActions": ["command-and-control"]
+          },
+          "effectText": "Mapped compromised users and C2 beacons from domain auth telemetry."
         },
         {
-          "label": "Escalate to final assessment",
-          "next": "final_assess",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": 10
-          }
-        }
-      ]
-    },
-    "corp_f2": {
-      "id": "corp_f2",
-      "type": "fail_soft",
-      "title": "Corporate IT Soft Failure 2",
-      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
-      "commandPreview": "incident-notes --tag soft-fail --review",
-      "options": [
-        {
-          "label": "Recover and continue in this segment",
+          "label": "Disable routing service in domain firewall",
           "next": "hub_corp",
-          "timeCostSec": 20,
+          "timeCostSec": 10,
           "effects": {
-            "scoreDelta": -6,
-            "noiseDelta": 1,
+            "scoreDelta": -55,
+            "lockoutNetwork": "corp",
+            "noiseDelta": 2,
             "network": "corp"
-          }
-        },
-        {
-          "label": "Pivot to SOC overview",
-          "next": "start",
-          "timeCostSec": 15,
-          "effects": {
-            "scoreDelta": 0
-          }
+          },
+          "effectText": "Domain segment routing collapsed after firewall service block."
         }
       ]
     },
-    "corp_c3": {
-      "id": "corp_c3",
+    "corp_fs": {
+      "id": "corp_fs",
       "type": "choice",
-      "title": "Corporate IT Decision 3",
-      "text": "Simulation choice: select a defensive tool profile for \"EDR process lineage hunt\".",
-      "commandPreview": "triage-tool --segment corp --task 3 --profile guided",
+      "machineId": "corp-fs-02",
+      "title": "Finance File Server",
+      "text": "Role: payroll + contracts storage. Ransomware started changing files and scheduling deletion jobs.",
+      "commandPreview": "fileserver-guard --host corp-fs-02 --mode preserve",
       "options": [
         {
-          "label": "Targeted profile (balanced)",
-          "next": "corp_r3",
-          "timeCostSec": 20,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": 8,
-            "noiseDelta": 0,
-            "addItems": [
-              "corp-ioc-fragment"
-            ]
-          },
-          "effectText": "Useful telemetry gathered with manageable exposure."
-        },
-        {
-          "label": "Aggressive full sweep",
-          "next": "corp_f3",
-          "timeCostSec": 30,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": -12,
-            "noiseDelta": 2,
-            "otRiskDelta": 0
-          },
-          "effectText": "Coverage improved, but monitoring systems noticed."
-        },
-        {
-          "label": "Stealth log query",
-          "next": "hub_corp",
-          "timeCostSec": 15,
-          "conditions": {},
-          "effects": {
-            "scoreDelta": 5,
-            "network": "corp"
-          },
-          "effectText": "Low-noise context gathered, no immediate host confirmation."
-        }
-      ]
-    },
-    "corp_r3": {
-      "id": "corp_r3",
-      "type": "result",
-      "title": "Corporate IT Result 3",
-      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
-      "commandPreview": "edr-query --template IOC-lite --scope segment",
-      "options": [
-        {
-          "label": "Return to network hub",
+          "label": "Stop delete jobs and preserve shared files",
           "next": "hub_corp",
           "timeCostSec": 10,
           "effects": {
-            "scoreDelta": 14,
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Escalate to final assessment",
-          "next": "final_assess",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": 10
-          }
-        }
-      ]
-    },
-    "corp_f3": {
-      "id": "corp_f3",
-      "type": "fail_soft",
-      "title": "Corporate IT Soft Failure 3",
-      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
-      "commandPreview": "incident-notes --tag soft-fail --review",
-      "options": [
-        {
-          "label": "Recover and continue in this segment",
-          "next": "hub_corp",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": -6,
-            "noiseDelta": 1,
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Pivot to SOC overview",
-          "next": "start",
-          "timeCostSec": 15,
-          "effects": {
-            "scoreDelta": 0
-          }
-        }
-      ]
-    },
-    "corp_c4": {
-      "id": "corp_c4",
-      "type": "choice",
-      "title": "Corporate IT Decision 4",
-      "text": "Simulation choice: select a defensive tool profile for \"domain trust audit\".",
-      "commandPreview": "triage-tool --segment corp --task 4 --profile guided",
-      "options": [
-        {
-          "label": "Targeted profile (balanced)",
-          "next": "corp_r4",
-          "timeCostSec": 20,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": 12,
-            "noiseDelta": 1
+            "scoreDelta": 46,
+            "addFoundHosts": ["corp-fs-02"],
+            "setFlags": { "ransomwareContained": true },
+            "unlockActions": ["actions-on-objectives"]
           },
-          "effectText": "Useful telemetry gathered with manageable exposure."
+          "effectText": "Deletion chain interrupted; legitimate finance files are protected."
         },
         {
-          "label": "Aggressive full sweep",
-          "next": "corp_f4",
-          "timeCostSec": 30,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": -12,
-            "noiseDelta": 2,
-            "otRiskDelta": 0
-          },
-          "effectText": "Coverage improved, but monitoring systems noticed."
-        },
-        {
-          "label": "Stealth log query",
-          "next": "hub_corp",
-          "timeCostSec": 15,
-          "conditions": {},
-          "effects": {
-            "scoreDelta": 5,
-            "network": "corp"
-          },
-          "effectText": "Low-noise context gathered, no immediate host confirmation."
-        }
-      ]
-    },
-    "corp_r4": {
-      "id": "corp_r4",
-      "type": "result",
-      "title": "Corporate IT Result 4",
-      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
-      "commandPreview": "edr-query --template IOC-lite --scope segment",
-      "options": [
-        {
-          "label": "Return to network hub",
+          "label": "Ignore and move on",
           "next": "hub_corp",
           "timeCostSec": 10,
-          "effects": {
-            "scoreDelta": 14,
-            "network": "corp",
-            "addItems": [
-              "containment-template"
-            ]
-          }
-        },
-        {
-          "label": "Escalate to final assessment",
-          "next": "final_assess",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": 10
-          }
-        }
-      ]
-    },
-    "corp_f4": {
-      "id": "corp_f4",
-      "type": "fail_soft",
-      "title": "Corporate IT Soft Failure 4",
-      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
-      "commandPreview": "incident-notes --tag soft-fail --review",
-      "options": [
-        {
-          "label": "Recover and continue in this segment",
-          "next": "hub_corp",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": -6,
-            "noiseDelta": 1,
-            "network": "corp",
-            "lockoutNetwork": "corp"
-          }
-        },
-        {
-          "label": "Pivot to SOC overview",
-          "next": "start",
-          "timeCostSec": 15,
-          "effects": {
-            "scoreDelta": 0
-          }
-        }
-      ]
-    },
-    "corp_c5": {
-      "id": "corp_c5",
-      "type": "choice",
-      "title": "Corporate IT Decision 5",
-      "text": "Simulation choice: select a defensive tool profile for \"mailbox rule anomaly\".",
-      "commandPreview": "triage-tool --segment corp --task 5 --profile guided",
-      "options": [
-        {
-          "label": "Targeted profile (balanced)",
-          "next": "corp_r5",
-          "timeCostSec": 20,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": 16,
-            "noiseDelta": 0,
-            "rollFromNetwork": "corp",
-            "maxFind": 2
-          },
-          "effectText": "Useful telemetry gathered with manageable exposure."
-        },
-        {
-          "label": "Aggressive full sweep",
-          "next": "corp_f5",
-          "timeCostSec": 30,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": -12,
-            "noiseDelta": 2,
-            "otRiskDelta": 0
-          },
-          "effectText": "Coverage improved, but monitoring systems noticed."
-        },
-        {
-          "label": "Stealth log query",
-          "next": "hub_corp",
-          "timeCostSec": 15,
-          "conditions": {},
-          "effects": {
-            "scoreDelta": 5,
-            "network": "corp"
-          },
-          "effectText": "Low-noise context gathered, no immediate host confirmation."
-        }
-      ]
-    },
-    "corp_r5": {
-      "id": "corp_r5",
-      "type": "result",
-      "title": "Corporate IT Result 5",
-      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
-      "commandPreview": "edr-query --template IOC-lite --scope segment",
-      "options": [
-        {
-          "label": "Return to network hub",
-          "next": "hub_corp",
-          "timeCostSec": 10,
-          "effects": {
-            "scoreDelta": 14,
-            "network": "corp",
-            "rollFromNetwork": "corp",
-            "maxFind": 2
-          }
-        },
-        {
-          "label": "Escalate to final assessment",
-          "next": "final_assess",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": 10
-          }
-        }
-      ]
-    },
-    "corp_f5": {
-      "id": "corp_f5",
-      "type": "fail_soft",
-      "title": "Corporate IT Soft Failure 5",
-      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
-      "commandPreview": "incident-notes --tag soft-fail --review",
-      "options": [
-        {
-          "label": "Recover and continue in this segment",
-          "next": "hub_corp",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": -6,
-            "noiseDelta": 1,
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Pivot to SOC overview",
-          "next": "start",
-          "timeCostSec": 15,
-          "effects": {
-            "scoreDelta": 0
-          }
-        }
-      ]
-    },
-    "corp_c6": {
-      "id": "corp_c6",
-      "type": "choice",
-      "title": "Corporate IT Decision 6",
-      "text": "Simulation choice: select a defensive tool profile for \"VPN posture mismatch\".",
-      "commandPreview": "triage-tool --segment corp --task 6 --profile guided",
-      "options": [
-        {
-          "label": "Targeted profile (balanced)",
-          "next": "corp_r6",
-          "timeCostSec": 20,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": 8,
-            "noiseDelta": 0,
-            "unlockActions": [
-              "hunt-template"
-            ]
-          },
-          "effectText": "Useful telemetry gathered with manageable exposure."
-        },
-        {
-          "label": "Aggressive full sweep",
-          "next": "corp_f6",
-          "timeCostSec": 30,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": -12,
-            "noiseDelta": 2,
-            "otRiskDelta": 0
-          },
-          "effectText": "Coverage improved, but monitoring systems noticed."
-        },
-        {
-          "label": "Stealth log query",
-          "next": "hub_corp",
-          "timeCostSec": 15,
-          "conditions": {},
-          "effects": {
-            "scoreDelta": 5,
-            "network": "corp"
-          },
-          "effectText": "Low-noise context gathered, no immediate host confirmation."
-        }
-      ]
-    },
-    "corp_r6": {
-      "id": "corp_r6",
-      "type": "result",
-      "title": "Corporate IT Result 6",
-      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
-      "commandPreview": "edr-query --template IOC-lite --scope segment",
-      "options": [
-        {
-          "label": "Return to network hub",
-          "next": "hub_corp",
-          "timeCostSec": 10,
-          "effects": {
-            "scoreDelta": 14,
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Escalate to final assessment",
-          "next": "final_assess",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": 10
-          }
-        }
-      ]
-    },
-    "corp_f6": {
-      "id": "corp_f6",
-      "type": "fail_soft",
-      "title": "Corporate IT Soft Failure 6",
-      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
-      "commandPreview": "incident-notes --tag soft-fail --review",
-      "options": [
-        {
-          "label": "Recover and continue in this segment",
-          "next": "hub_corp",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": -6,
-            "noiseDelta": 1,
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Pivot to SOC overview",
-          "next": "start",
-          "timeCostSec": 15,
-          "effects": {
-            "scoreDelta": 0
-          }
-        }
-      ]
-    },
-    "corp_c7": {
-      "id": "corp_c7",
-      "type": "choice",
-      "title": "Corporate IT Decision 7",
-      "text": "Simulation choice: select a defensive tool profile for \"backup catalog check\".",
-      "commandPreview": "triage-tool --segment corp --task 7 --profile guided",
-      "options": [
-        {
-          "label": "Targeted profile (balanced)",
-          "next": "corp_r7",
-          "timeCostSec": 20,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": 12,
-            "noiseDelta": 0,
-            "rollFromNetwork": "corp",
-            "maxFind": 2
-          },
-          "effectText": "Useful telemetry gathered with manageable exposure."
-        },
-        {
-          "label": "Aggressive full sweep",
-          "next": "corp_f7",
-          "timeCostSec": 30,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": -12,
-            "noiseDelta": 2,
-            "otRiskDelta": 0
-          },
-          "effectText": "Coverage improved, but monitoring systems noticed."
-        },
-        {
-          "label": "Stealth log query",
-          "next": "hub_corp",
-          "timeCostSec": 15,
-          "conditions": {
-            "requiredItems": [
-              "ioc-template"
-            ]
-          },
-          "effects": {
-            "scoreDelta": 5,
-            "network": "corp"
-          },
-          "effectText": "Low-noise context gathered, no immediate host confirmation."
-        }
-      ]
-    },
-    "corp_r7": {
-      "id": "corp_r7",
-      "type": "result",
-      "title": "Corporate IT Result 7",
-      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
-      "commandPreview": "edr-query --template IOC-lite --scope segment",
-      "options": [
-        {
-          "label": "Return to network hub",
-          "next": "hub_corp",
-          "timeCostSec": 10,
-          "effects": {
-            "scoreDelta": 14,
-            "network": "corp",
-            "rollFromNetwork": "corp",
-            "maxFind": 2
-          }
-        },
-        {
-          "label": "Escalate to final assessment",
-          "next": "final_assess",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": 10
-          }
-        }
-      ]
-    },
-    "corp_f7": {
-      "id": "corp_f7",
-      "type": "fail_soft",
-      "title": "Corporate IT Soft Failure 7",
-      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
-      "commandPreview": "incident-notes --tag soft-fail --review",
-      "options": [
-        {
-          "label": "Recover and continue in this segment",
-          "next": "hub_corp",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": -6,
-            "noiseDelta": 1,
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Pivot to SOC overview",
-          "next": "start",
-          "timeCostSec": 15,
-          "effects": {
-            "scoreDelta": 0
-          }
-        }
-      ]
-    },
-    "corp_c8": {
-      "id": "corp_c8",
-      "type": "choice",
-      "title": "Corporate IT Decision 8",
-      "text": "Simulation choice: select a defensive tool profile for \"vdi session burst review\".",
-      "commandPreview": "triage-tool --segment corp --task 8 --profile guided",
-      "options": [
-        {
-          "label": "Targeted profile (balanced)",
-          "next": "corp_r8",
-          "timeCostSec": 20,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": 16,
-            "noiseDelta": 1
-          },
-          "effectText": "Useful telemetry gathered with manageable exposure."
-        },
-        {
-          "label": "Aggressive full sweep",
-          "next": "corp_f8",
-          "timeCostSec": 30,
-          "effects": {
-            "network": "corp",
-            "scoreDelta": -12,
-            "noiseDelta": 2,
-            "otRiskDelta": 0
-          },
-          "effectText": "Coverage improved, but monitoring systems noticed."
-        },
-        {
-          "label": "Stealth log query",
-          "next": "hub_corp",
-          "timeCostSec": 15,
-          "conditions": {
-            "requiredItems": [
-              "ioc-template"
-            ]
-          },
-          "effects": {
-            "scoreDelta": 5,
-            "network": "corp"
-          },
-          "effectText": "Low-noise context gathered, no immediate host confirmation."
-        }
-      ]
-    },
-    "corp_r8": {
-      "id": "corp_r8",
-      "type": "result",
-      "title": "Corporate IT Result 8",
-      "text": "You correlated alerts, endpoint context, and logs. New leads are available.",
-      "commandPreview": "edr-query --template IOC-lite --scope segment",
-      "options": [
-        {
-          "label": "Return to network hub",
-          "next": "hub_corp",
-          "timeCostSec": 10,
-          "effects": {
-            "scoreDelta": 14,
-            "network": "corp"
-          }
-        },
-        {
-          "label": "Escalate to final assessment",
-          "next": "final_assess",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": 10
-          }
-        }
-      ]
-    },
-    "corp_f8": {
-      "id": "corp_f8",
-      "type": "fail_soft",
-      "title": "Corporate IT Soft Failure 8",
-      "text": "A decoy or policy trap slowed your workflow. Pivot or recover and continue.",
-      "commandPreview": "incident-notes --tag soft-fail --review",
-      "options": [
-        {
-          "label": "Recover and continue in this segment",
-          "next": "hub_corp",
-          "timeCostSec": 20,
-          "effects": {
-            "scoreDelta": -6,
-            "noiseDelta": 1,
-            "network": "corp",
-            "lockoutNetwork": "corp"
-          }
-        },
-        {
-          "label": "Pivot to SOC overview",
-          "next": "start",
-          "timeCostSec": 15,
-          "effects": {
-            "scoreDelta": 0
-          }
+          "effects": { "scoreDelta": -30, "noiseDelta": 1 },
+          "effectText": "Ransomware kept deleting files while you were away."
         }
       ]
     }

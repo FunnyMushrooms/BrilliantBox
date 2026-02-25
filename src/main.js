@@ -6,6 +6,7 @@ import { saveLeaderboard, saveSession } from './storage.js';
 let context;
 let showMap = false;
 let difficulty = 'expert';
+let timerHandle;
 
 function randomSeed() {
   return `seed-${Math.random().toString(36).slice(2, 10)}`;
@@ -26,6 +27,14 @@ async function start(mode = 'new') {
     rerender();
   };
 
+  window.__jumpNode = (nodeId) => {
+    if (game.state.sessionEnded) return;
+    if (!context.scenario.nodes[nodeId]) return;
+    game.state.nodeId = nodeId;
+    game.state.effectMessage = `Opened machine view: ${nodeId}`;
+    rerender();
+  };
+
   bindUI({
     onChoose: (idx) => window.__choose(idx),
     onReplay: (m) => start(m),
@@ -36,10 +45,22 @@ async function start(mode = 'new') {
       game.interactWithMalware(hostId, action);
       if (game.state.sessionEnded) finalizeRun();
       rerender();
-    }
+    },
+    onJumpNode: (nodeId) => window.__jumpNode(nodeId)
   });
 
+  startTimer();
   rerender();
+}
+
+function startTimer() {
+  if (timerHandle) clearInterval(timerHandle);
+  timerHandle = setInterval(() => {
+    if (!context?.game || context.game.state.sessionEnded) return;
+    context.game.tick(1);
+    if (context.game.state.sessionEnded) finalizeRun();
+    rerender();
+  }, 1000);
 }
 
 function rerender() {
