@@ -13,3 +13,22 @@
 - Updated docs (`README.md`, `develop.txt`) to explain modular scenario architecture and extension flow.
 - Re-checked for `dental.png`; still not present in repo, so comparison with that visual flow remains pending.
 - Discussion note: if `dental.png` is later provided, we should map its Telegram/web action flow against current node hubs and identify missing transitions.
+
+## Iteration 3
+- Reworked UI to a more visual mission-board style with richer gradients, card-like actions, machine context panel, and host badges with platform icons.
+- Replaced plain-text network map tiles with a subnet SVG map that shows SOC center, linked segments, and lock/unlock status icons.
+- Added machine-aware investigation hints and tool suggestions per platform (Windows/Linux/OT/appliance), including interactive command previews on option hover/focus (e.g., nmap variants).
+- Extended `data/hostPool.json` with `platform` and `role` metadata so gameplay can surface OS-specific checks such as Task Scheduler/Registry/SMB for Windows and cron/services/SSH for Linux.
+- Checked provided Dental flow image from the prompt context (telegram/web action inspiration) and aligned current iteration toward visual mission cards and explicit action affordances, while keeping existing scenario graph flow.
+
+## Iteration 4
+- Addressed feedback about engagement: added dark-humor incident prompts and machine-specific “interesting question” cards (registry oddities, suspicious host load, OT anomalies).
+- Reduced visible action overload by capping options per turn (2 in Casual Fun, 3 in Analyst Mode) while preserving underlying scenario flow.
+- Added difficulty selector with two modes:
+  - Casual Fun: guided/plain-language hints and everyday-style missions (USB lost, Instagram blocked, noisy laptop).
+  - Analyst Mode: command-oriented triage flow similar to prior behavior.
+- Implemented malware visibility + interaction in sidebar:
+  - Newly found infected hosts appear as malware cards with status and threat type.
+  - Added action buttons (Analyze, Quarantine, Eradicate) with time/score/noise consequences.
+- Extended engine state/reporting with malware sightings and interaction handling.
+- Re-checked Dental image intent from prompt context and kept alignment on clear visual actions + card interactions in web flow; telegram-specific flow still to be mapped if a formal in-repo asset/spec is provided.

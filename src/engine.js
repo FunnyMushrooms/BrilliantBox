@@ -23,6 +23,7 @@ export class GameEngine {
       inventory: [],
       foundHosts: [],
       unlockedActions: [],
+      malwareSightings: {},
       flags: { stoppedDetonation: false },
       sessionEnded: false,
       ending: null,
@@ -98,8 +99,54 @@ export class GameEngine {
       return;
     }
     this.state.foundHosts.push(hostId);
+    if (!this.state.malwareSightings[hostId]) {
+      this.state.malwareSightings[hostId] = {
+        status: 'active',
+        threat: this.inferThreatType(hostId)
+      };
+    }
     this.state.score += 90;
     if (!this.state.inventory.includes('ioc-template')) this.state.inventory.push('ioc-template');
+  }
+
+  inferThreatType(hostId) {
+    if (hostId.includes('dc') || hostId.includes('fs')) return 'credential-stealer';
+    if (hostId.includes('ot')) return 'process-killer';
+    if (hostId.includes('drone')) return 'build-backdoor';
+    return 'loader';
+  }
+
+  interactWithMalware(hostId, action) {
+    const sighting = this.state.malwareSightings[hostId];
+    if (!sighting || sighting.status === 'eradicated') return;
+
+    if (action === 'analyze') {
+      this.consumeTime(15);
+      this.state.score += 18;
+      this.state.effectMessage = `Reverse engineering notes updated for ${hostId}.`;
+      return;
+    }
+
+    if (action === 'quarantine') {
+      this.consumeTime(25);
+      sighting.status = 'contained';
+      this.state.score += 25;
+      this.state.effectMessage = `${hostId} isolated. Malware can no longer spread from this host.`;
+      return;
+    }
+
+    if (action === 'eradicate') {
+      this.consumeTime(30);
+      if (sighting.status !== 'contained') {
+        this.state.noise = Math.min(10, this.state.noise + 1);
+        this.state.score -= 8;
+        this.state.effectMessage = `Rushed removal on ${hostId} left noisy traces. Try containing first.`;
+        return;
+      }
+      sighting.status = 'eradicated';
+      this.state.score += 35;
+      this.state.effectMessage = `Malware eradicated on ${hostId}.`;
+    }
   }
 
   consumeTime(seconds) {
@@ -133,6 +180,7 @@ export class GameEngine {
       inventory: this.state.inventory,
       path: this.path,
       timeline: this.timeline,
+      malwareSightings: this.state.malwareSightings,
       breakdown: this.state.breakdown || getScoreBreakdown(this.state)
     };
   }

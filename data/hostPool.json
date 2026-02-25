@@ -1,24 +1,226 @@
 {
   "hosts": [
-    {"id":"prov-gw-01","network":"provider","eligibleInfected":true,"decoy":false,"tags":["gateway"]},
-    {"id":"prov-mail-02","network":"provider","eligibleInfected":true,"decoy":false,"tags":["mail"]},
-    {"id":"prov-hpot-09","network":"provider","eligibleInfected":false,"decoy":true,"tags":["honeypot"]},
-    {"id":"prov-cache-03","network":"provider","eligibleInfected":true,"decoy":false,"tags":["cache"]},
-    {"id":"corp-dc-01","network":"corp","eligibleInfected":true,"decoy":false,"tags":["ad","dc"]},
-    {"id":"corp-fs-02","network":"corp","eligibleInfected":true,"decoy":false,"tags":["file"]},
-    {"id":"corp-edr-decoy","network":"corp","eligibleInfected":false,"decoy":true,"tags":["decoy"]},
-    {"id":"corp-vdi-03","network":"corp","eligibleInfected":true,"decoy":false,"tags":["vdi"]},
-    {"id":"ot-hmi-01","network":"ot","eligibleInfected":true,"decoy":false,"tags":["hmi"]},
-    {"id":"ot-historian-02","network":"ot","eligibleInfected":true,"decoy":false,"tags":["historian"]},
-    {"id":"ot-plc-decoy","network":"ot","eligibleInfected":false,"decoy":true,"tags":["plc","decoy"]},
-    {"id":"ot-jump-03","network":"ot","eligibleInfected":true,"decoy":false,"tags":["jump"]},
-    {"id":"drone-ci-01","network":"drone","eligibleInfected":true,"decoy":false,"tags":["ci"]},
-    {"id":"drone-sim-02","network":"drone","eligibleInfected":true,"decoy":false,"tags":["sim"]},
-    {"id":"drone-secdecoy","network":"drone","eligibleInfected":false,"decoy":true,"tags":["decoy"]},
-    {"id":"drone-archive-03","network":"drone","eligibleInfected":true,"decoy":false,"tags":["archive"]},
-    {"id":"corp-app-04","network":"corp","eligibleInfected":true,"decoy":false,"tags":["app"]},
-    {"id":"prov-api-04","network":"provider","eligibleInfected":true,"decoy":false,"tags":["api"]},
-    {"id":"ot-eng-04","network":"ot","eligibleInfected":true,"decoy":false,"tags":["engineering"]},
-    {"id":"drone-lab-04","network":"drone","eligibleInfected":true,"decoy":false,"tags":["lab"]}
+    {
+      "id": "prov-gw-01",
+      "network": "provider",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "gateway"
+      ],
+      "platform": "appliance",
+      "role": "edge-gateway"
+    },
+    {
+      "id": "prov-mail-02",
+      "network": "provider",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "mail"
+      ],
+      "platform": "appliance",
+      "role": "mail-relay"
+    },
+    {
+      "id": "prov-hpot-09",
+      "network": "provider",
+      "eligibleInfected": false,
+      "decoy": true,
+      "tags": [
+        "honeypot"
+      ],
+      "platform": "appliance",
+      "role": "honeypot"
+    },
+    {
+      "id": "prov-cache-03",
+      "network": "provider",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "cache"
+      ],
+      "platform": "appliance",
+      "role": "api-cache"
+    },
+    {
+      "id": "corp-dc-01",
+      "network": "corp",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "ad",
+        "dc"
+      ],
+      "platform": "windows",
+      "role": "domain-controller"
+    },
+    {
+      "id": "corp-fs-02",
+      "network": "corp",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "file"
+      ],
+      "platform": "windows",
+      "role": "file-server"
+    },
+    {
+      "id": "corp-edr-decoy",
+      "network": "corp",
+      "eligibleInfected": false,
+      "decoy": true,
+      "tags": [
+        "decoy"
+      ],
+      "platform": "windows",
+      "role": "edr-decoy"
+    },
+    {
+      "id": "corp-vdi-03",
+      "network": "corp",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "vdi"
+      ],
+      "platform": "windows",
+      "role": "vdi-broker"
+    },
+    {
+      "id": "ot-hmi-01",
+      "network": "ot",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "hmi"
+      ],
+      "platform": "ot",
+      "role": "hmi"
+    },
+    {
+      "id": "ot-historian-02",
+      "network": "ot",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "historian"
+      ],
+      "platform": "ot",
+      "role": "historian"
+    },
+    {
+      "id": "ot-plc-decoy",
+      "network": "ot",
+      "eligibleInfected": false,
+      "decoy": true,
+      "tags": [
+        "plc",
+        "decoy"
+      ],
+      "platform": "ot",
+      "role": "plc-decoy"
+    },
+    {
+      "id": "ot-jump-03",
+      "network": "ot",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "jump"
+      ],
+      "platform": "ot",
+      "role": "jump-host"
+    },
+    {
+      "id": "drone-ci-01",
+      "network": "drone",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "ci"
+      ],
+      "platform": "linux",
+      "role": "ci-runner"
+    },
+    {
+      "id": "drone-sim-02",
+      "network": "drone",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "sim"
+      ],
+      "platform": "linux",
+      "role": "simulation-node"
+    },
+    {
+      "id": "drone-secdecoy",
+      "network": "drone",
+      "eligibleInfected": false,
+      "decoy": true,
+      "tags": [
+        "decoy"
+      ],
+      "platform": "linux",
+      "role": "lab-decoy"
+    },
+    {
+      "id": "drone-archive-03",
+      "network": "drone",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "archive"
+      ],
+      "platform": "linux",
+      "role": "artifact-archive"
+    },
+    {
+      "id": "corp-app-04",
+      "network": "corp",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "app"
+      ],
+      "platform": "linux",
+      "role": "linux-app"
+    },
+    {
+      "id": "prov-api-04",
+      "network": "provider",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "api"
+      ],
+      "platform": "appliance",
+      "role": "api-gateway"
+    },
+    {
+      "id": "ot-eng-04",
+      "network": "ot",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "engineering"
+      ],
+      "platform": "ot",
+      "role": "engineering-workstation"
+    },
+    {
+      "id": "drone-lab-04",
+      "network": "drone",
+      "eligibleInfected": true,
+      "decoy": false,
+      "tags": [
+        "lab"
+      ],
+      "platform": "linux",
+      "role": "lab-control"
+    }
   ]
 }

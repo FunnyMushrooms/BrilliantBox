@@ -14,6 +14,12 @@
           <div><strong>Seed:</strong> <span id="seedValue">-</span></div>
           <div><strong>Timer:</strong> <span id="timerValue">10:00</span></div>
           <div><strong>Score:</strong> <span id="scoreValue">0</span></div>
+          <label><strong>Difficulty:</strong>
+            <select id="difficultyMode">
+              <option value="easy">Casual Fun</option>
+              <option value="expert" selected>Analyst Mode</option>
+            </select>
+          </label>
         </div>
         <div class="meters">
           <label>Noise <progress id="noiseMeter" max="10" value="0"></progress><span id="noiseValue">0/10</span></label>
@@ -32,12 +38,15 @@
         <h2 id="nodeTitle">Story</h2>
         <p id="nodeText"></p>
         <div id="effectsText" class="effects"></div>
+        <section id="nodeContext" class="node-context" aria-label="Machine-specific investigation hints"></section>
         <div id="choices" class="choices" role="listbox" aria-label="Available actions"></div>
       </main>
 
       <aside class="panel right">
         <h2>Intel / Inventory</h2>
         <div id="inventory"></div>
+        <h3>Detected Malware</h3>
+        <div id="malwarePanel" class="malware-panel"></div>
         <h3>Command Builder</h3>
         <div id="commandBuilder" class="cmd"></div>
         <h3>Leaderboard</h3>
