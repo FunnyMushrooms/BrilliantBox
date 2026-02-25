@@ -5,6 +5,7 @@ import { saveLeaderboard, saveSession } from './storage.js';
 
 let context;
 let showMap = false;
+let difficulty = 'expert';
 
 function randomSeed() {
   return `seed-${Math.random().toString(36).slice(2, 10)}`;
@@ -29,14 +30,20 @@ async function start(mode = 'new') {
     onChoose: (idx) => window.__choose(idx),
     onReplay: (m) => start(m),
     onExport: exportReport,
-    onToggleMap: () => { showMap = !showMap; rerender(); }
+    onToggleMap: () => { showMap = !showMap; rerender(); },
+    onDifficultyChange: (value) => { difficulty = value; rerender(); },
+    onMalwareAction: (hostId, action) => {
+      game.interactWithMalware(hostId, action);
+      if (game.state.sessionEnded) finalizeRun();
+      rerender();
+    }
   });
 
   rerender();
 }
 
 function rerender() {
-  render(context.game, context.scenario, showMap);
+  render(context.game, context.scenario, showMap, difficulty);
   saveSession(context.game.state);
 }
 
