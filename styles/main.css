@@ -164,3 +164,22 @@ button { background: linear-gradient(180deg, #395792, #2f497d); border: 1px soli
 
 .site-preview { margin-top: 10px; border: 1px solid #5f87cf; border-radius: 10px; padding: 10px; background: #11223e; }
 .app-btn { width: 100%; text-align: left; }
+
+
+.topo-bg { fill: #0b111f; stroke: #3d5f96; }
+.zone-box { fill: transparent; stroke: #d8e6ff; stroke-width: 1.4; }
+.zone-box.firewall { fill: rgba(57, 26, 26, .35); cursor: pointer; }
+.zone-title { fill: #f6fbff; font-size: 24px; font-weight: 700; }
+.zone-label { fill: #e5f1ff; font-size: 20px; }
+.proc-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.proc-table th, .proc-table td { border-bottom: 1px solid #45649f; padding: 6px; text-align: left; }
+.proc-table button { padding: 5px 8px; font-size: .8rem; }
+
+
+.kill-flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.flow-stage { min-width: 120px; max-width: 170px; border: 1px solid #4968a8; border-radius: 10px; padding: 6px; background: #162644; display: grid; gap: 4px; }
+.flow-stage.off { opacity: .75; }
+.flow-stage.on { border-color: #79db9d; background: #143323; }
+.flow-title { text-transform: capitalize; font-size: .8rem; font-weight: 700; }
+.flow-evidence { font-size: .7rem; color: #c4dafd; word-break: break-word; }
+.flow-arrow { color: #8eb5ff; font-size: 1rem; }

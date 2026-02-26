@@ -49,6 +49,11 @@ async function start(mode = 'new') {
       rerender();
     },
     onJumpNode: (nodeId) => window.__jumpNode(nodeId),
+    onMachineOperation: (hostId, operation) => {
+      const result = game.runMachineOperation(hostId, operation);
+      rerender();
+      return result;
+    },
     onFirewallChange: (linkId, status) => {
       game.setFirewallRule(linkId, status);
       rerender();
@@ -59,10 +64,10 @@ async function start(mode = 'new') {
         rerender();
         return result;
       }
-      game.blockProcess(hostId, processName);
+      const result = game.blockProcess(hostId, processName);
       if (game.state.sessionEnded) finalizeRun();
       rerender();
-      return null;
+      return result;
     }
   });
 

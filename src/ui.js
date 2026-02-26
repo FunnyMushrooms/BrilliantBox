@@ -104,7 +104,59 @@ const FIREWALL_CASES = {
 
 const firewallLabState = {};
 
-export function bindUI({ onChoose, onReplay, onExport, onToggleMap, onDifficultyChange, onMalwareAction, onJumpNode, onFirewallChange, onProcessAction }) {
+const MACHINE_ACTIONS = {
+  'corp-hr-01': [
+    { id: 'audit-mail-rules', label: 'Audit HR mail forwarding rules', command: 'Get-InboxRule -Mailbox hr@corp.local' },
+    { id: 'trace-route', label: 'Investigate network route (tracert)', command: 'tracert 10.10.66.77' }
+  ],
+  'corp-dc-01': [
+    { id: 'reset-krbtgt', label: 'Reset compromised Kerberos trust', command: 'Reset-KrbtgtKeys -Force' },
+    { id: 'aggressive-scan', label: 'Aggressive AD scan (high EDR risk)', command: 'nmap -p 1-65535 -T 4 corp-dc-01' }
+  ],
+  'corp-fs-02': [
+    { id: 'restore-fileshare-acl', label: 'Restore FileServer ACL from backup', command: 'icacls \\corp-fs-02\\shared /restore backup.acl' },
+    { id: 'proxy-cache-triage', label: 'Cross-check suspicious package origin', command: 'proxyctl cache audit --top-talkers' }
+  ],
+  'prov-dns-01': [
+    { id: 'flush-dns-poison', label: 'Flush DNS poisoning artifacts', command: 'rndc flush && rndc reload' },
+    { id: 'trace-route', label: 'Trace blocked public route', command: 'tracert 10.10.66.77' }
+  ],
+  'prov-fw-01': [
+    { id: 'enable-fw-hunt', label: 'Enable firewall hunt monitor profile', command: 'fwctl profile threat-hunt --mode monitor' },
+    { id: 'aggressive-scan', label: 'Aggressive edge scan (risk lockout)', command: 'nmap -p 1-65535 -T 4 prov-fw-01' }
+  ],
+  'prov-proxy-01': [
+    { id: 'proxy-cache-triage', label: 'Investigate proxy cache anomalies', command: 'proxyctl cache audit --top-talkers' },
+    { id: 'trace-route', label: 'Trace upstream route loops', command: 'tracert 10.10.66.77' }
+  ],
+  'ot-hmi-01': [
+    { id: 'ot-safe-mode', label: 'Switch ICS to safe mode', command: 'scadactl set safety-mode on' },
+    { id: 'isolate-substation-link', label: 'Isolate corp <-> substation link', command: 'gatewayctl isolate-link --peer corp' }
+  ],
+  'ot-historian-02': [
+    { id: 'recover-historian-stream', label: 'Repair missing historian telemetry', command: 'historiandiff --repair --window 4h' },
+    { id: 'trace-route', label: 'Trace OT relay route', command: 'tracert 10.10.66.77' }
+  ],
+  'ot-gateway-03': [
+    { id: 'isolate-substation-link', label: 'Isolate suspicious OT peer', command: 'gatewayctl isolate-link --peer corp' },
+    { id: 'enable-fw-hunt', label: 'Mirror traffic to firewall hunt mode', command: 'fwctl profile threat-hunt --mode monitor' }
+  ],
+  'drone-relay-01': [
+    { id: 'rotate-uav-keys', label: 'Rotate UAV relay encryption keys', command: 'uavctl key-rotate --all-relays' },
+    { id: 'aggressive-scan', label: 'Aggressive relay scan (risk mission outage)', command: 'nmap -p 1-65535 -T 4 drone-relay-01' }
+  ],
+  'drone-plan-02': [
+    { id: 'rollback-flight-plan', label: 'Rollback suspicious flight plan', command: 'missionctl rollback --last-known-good' },
+    { id: 'trace-route', label: 'Trace mission package route', command: 'tracert 10.10.66.77' }
+  ],
+  'drone-archive-03': [
+    { id: 'quarantine-archive-packages', label: 'Quarantine unsigned UAV packages', command: 'archivectl quarantine --unsigned' },
+    { id: 'proxy-cache-triage', label: 'Cross-check archive source via proxy', command: 'proxyctl cache audit --top-talkers' }
+  ]
+};
+
+
+export function bindUI({ onChoose, onReplay, onExport, onToggleMap, onDifficultyChange, onMalwareAction, onJumpNode, onMachineOperation, onFirewallChange, onProcessAction }) {
   document.getElementById('newSeedBtn').onclick = () => onReplay('new');
   document.getElementById('sameSeedBtn').onclick = () => onReplay('same');
   document.getElementById('exportBtn').onclick = onExport;
@@ -122,6 +174,15 @@ export function bindUI({ onChoose, onReplay, onExport, onToggleMap, onDifficulty
 
     const jump = e.target.closest('[data-jump-node]');
     if (jump) return runTransition(`Switching to ${jump.dataset.jumpNode} ...`, () => onJumpNode(jump.dataset.jumpNode));
+
+    const machineOpen = e.target.closest('[data-machine-open]');
+    if (machineOpen) return openMachineModal(machineOpen.dataset.machineOpen, machineOpen.dataset.machineNode);
+
+    const machineJump = e.target.closest('[data-machine-jump]');
+    if (machineJump) return runTransition('Opening machine workspace ...', () => onJumpNode(machineJump.dataset.machineJump));
+
+    const machineOp = e.target.closest('[data-machine-op]');
+    if (machineOp) return runMachineOperation(machineOp.dataset.machineHost, machineOp.dataset.machineOp, onMachineOperation);
 
     const fwOpen = e.target.closest('[data-fw-open]');
     if (fwOpen) return openFirewallLab(fwOpen.dataset.fwOpen, onFirewallChange);
@@ -160,6 +221,7 @@ export function render(game, scenario, showMap = false, difficulty = 'expert') {
   const node = scenario.nodes[state.nodeId];
   const context = deriveNodeContext(game, node);
   const firewallLinks = game.getFirewallLinks();
+  window.__stateEvidence = state.evidence || { maliciousIps: [], executionPaths: [] };
 
   document.getElementById('seedValue').textContent = game.seed;
   document.getElementById('difficultyMode').value = difficulty;
@@ -173,8 +235,8 @@ export function render(game, scenario, showMap = false, difficulty = 'expert') {
 
   renderContextPanel(context, difficulty);
   renderChoices(node, game.getAvailableOptions(), context, difficulty);
-  renderNetworkMap(state.access, firewallLinks);
-  renderKillChain(state.killChain || { stages: [], revealed: [] });
+  renderNetworkMap(game, state.access, firewallLinks);
+  renderKillChain(state.killChain || { stages: [], revealed: [] }, state.evidence || { maliciousIps: [], executionPaths: [] });
   renderInventory(state, game.seededHosts?.hostMap || []);
   renderMalwarePanel(state.malwareSightings || {}, game.seededHosts?.hostMap || []);
   renderOpsPanel(context, firewallLinks);
@@ -249,15 +311,17 @@ function pickMode(label = '') {
   return 'targeted';
 }
 
-function renderNetworkMap(access, links) {
+function renderNetworkMap(game, access, links) {
   const el = document.getElementById('networkMap');
   const linkById = Object.fromEntries(links.map((l) => [l.id, l]));
+  const hostMeta = Object.fromEntries((game.seededHosts?.hostMap || []).map((h) => [h.id, h]));
+  window.__machineMeta = hostMeta;
 
-  const machine = (x, y, nodeId, icon, label) => `
-    <g class="map-machine" data-jump-node="${nodeId}" transform="translate(${x},${y})">
-      <rect width="56" height="44" rx="10"></rect>
-      <text x="28" y="18" text-anchor="middle" font-size="16">${icon}</text>
-      <text x="28" y="34" text-anchor="middle" font-size="7">${label}</text>
+  const machine = (x, y, hostId, nodeId, icon, label) => `
+    <g class="map-machine" data-machine-open="${hostId}" data-machine-node="${nodeId}" transform="translate(${x},${y})">
+      <rect width="86" height="54" rx="10"></rect>
+      <text x="43" y="20" text-anchor="middle" font-size="18">${icon}</text>
+      <text x="43" y="40" text-anchor="middle" font-size="10">${label}</text>
     </g>`;
 
   const fwKnob = (id, x, y) => {
@@ -268,53 +332,51 @@ function renderNetworkMap(access, links) {
     </g>`;
   };
 
-  const status = (n) => !access[n] ? '🔒' : '🟢';
+  el.innerHTML = `<svg viewBox="0 0 1200 760" class="subnet-svg full-map" role="img" aria-label="Interactive topology">
+    <rect x="18" y="18" width="1164" height="724" class="topo-bg"></rect>
 
-  el.innerHTML = `<svg viewBox="0 0 900 560" class="subnet-svg full-map" role="img" aria-label="Interactive four-network spider-net topology">
-    <defs><linearGradient id="linegrad" x1="0" x2="1"><stop offset="0" stop-color="#7cd7ff"/><stop offset="1" stop-color="#d0a4ff"/></linearGradient></defs>
+    <rect x="250" y="40" width="700" height="200" class="zone-box"></rect>
+    <rect x="70" y="260" width="350" height="250" class="zone-box"></rect>
+    <rect x="780" y="280" width="340" height="240" class="zone-box"></rect>
 
-    <circle cx="450" cy="280" r="210" class="web-ring"></circle>
-    <circle cx="450" cy="280" r="140" class="web-ring"></circle>
-    <circle cx="450" cy="280" r="70" class="web-ring"></circle>
-    <line x1="450" y1="70" x2="450" y2="490" class="web-line"/>
-    <line x1="240" y1="280" x2="660" y2="280" class="web-line"/>
-    <line x1="302" y1="132" x2="598" y2="428" class="web-line"/>
-    <line x1="302" y1="428" x2="598" y2="132" class="web-line"/>
+    <line x1="340" y1="360" x2="560" y2="360" class="map-link"/>
+    <line x1="850" y1="360" x2="640" y2="360" class="map-link"/>
+    <line x1="600" y1="240" x2="600" y2="310" class="map-link"/>
+    <line x1="600" y1="410" x2="600" y2="520" class="map-link"/>
+    <line x1="260" y1="510" x2="560" y2="570" class="map-link"/>
+    <line x1="960" y1="560" x2="640" y2="570" class="map-link"/>
 
-    <rect x="404" y="244" width="92" height="72" rx="12" class="soc-core" data-jump-node="final_assess"></rect>
-    <text x="450" y="271" text-anchor="middle" font-size="20">🛡️</text>
-    <text x="450" y="292" text-anchor="middle" font-size="10">SOC / Kill-Chain</text>
+    ${fwKnob('provider-corp', 500, 350)}
+    ${fwKnob('provider-drone', 700, 350)}
+    ${fwKnob('corp-drone', 600, 330)}
+    ${fwKnob('corp-ot', 560, 535)}
 
-    <line x1="450" y1="244" x2="450" y2="126" class="map-link" />
-    <line x1="404" y1="280" x2="242" y2="180" class="map-link" />
-    <line x1="496" y1="280" x2="658" y2="180" class="map-link" />
-    <line x1="450" y1="316" x2="450" y2="434" class="map-link" />
+    <text x="600" y="278" text-anchor="middle" class="zone-label">Router</text>
+    <rect x="560" y="310" width="80" height="70" rx="8" class="soc-core" data-jump-node="start"></rect>
+    <text x="600" y="346" text-anchor="middle" font-size="26">🛜</text>
 
-    ${fwKnob('provider-corp', 338, 178)}
-    ${fwKnob('provider-drone', 562, 178)}
-    ${fwKnob('corp-drone', 450, 165)}
-    ${fwKnob('corp-ot', 340, 356)}
+    <text x="610" y="92" text-anchor="middle" class="zone-title">Provider / ICS</text>
+    ${machine(360, 110, 'prov-dns-01', 'provider_dns', '🖥️', 'Control Station')}
+    ${machine(556, 110, 'prov-fw-01', 'provider_router', '🧊', 'Controller')}
+    ${machine(752, 110, 'prov-proxy-01', 'provider_proxy', '🗄️', 'PowerPlant')}
 
-    <g transform="translate(450,110)"><circle r="54" class="segment provider"/><text y="-8" text-anchor="middle" font-size="24">🌐</text><text y="18" text-anchor="middle" font-size="10">Provider Enclave ${status('provider')}</text></g>
-    <g transform="translate(210,170)"><circle r="54" class="segment corp"/><text y="-8" text-anchor="middle" font-size="24">🏢</text><text y="18" text-anchor="middle" font-size="10">Corp Subnet ${status('corp')}</text></g>
-    <g transform="translate(690,170)"><circle r="54" class="segment drone"/><text y="-8" text-anchor="middle" font-size="24">🛰️</text><text y="18" text-anchor="middle" font-size="10">UAV Enclave ${status('drone')}</text></g>
-    <g transform="translate(450,450)"><circle r="54" class="segment ot"/><text y="-8" text-anchor="middle" font-size="24">⚙️</text><text y="18" text-anchor="middle" font-size="10">ICS Subnet ${status('ot')}</text></g>
+    <text x="240" y="308" text-anchor="middle" class="zone-title">Domain</text>
+    ${machine(110, 330, 'corp-hr-01', 'corp_hr', '🖥️', 'HR')}
+    ${machine(230, 330, 'corp-dc-01', 'corp_dc', '🖥️', 'HQ')}
+    ${machine(100, 420, 'corp-fs-02', 'corp_fs', '🏦', 'Banking App')}
+    ${machine(240, 420, 'corp-fs-02', 'corp_fs', '💾', 'FileServer')}
 
-    ${machine(384, 140, 'provider_dns', '🗄️', 'DNS')}
-    ${machine(450, 140, 'provider_router', '🔥', 'FW')}
-    ${machine(516, 140, 'provider_proxy', '📦', 'Proxy')}
+    <text x="950" y="322" text-anchor="middle" class="zone-title">Military</text>
+    ${machine(840, 340, 'drone-plan-02', 'drone_plan', '💻', 'Engineer 1')}
+    ${machine(980, 340, 'drone-relay-01', 'drone_relay', '✈️', 'UAV')}
+    ${machine(900, 430, 'drone-archive-03', 'drone_archive', '🗼', 'Station')}
 
-    ${machine(142, 224, 'corp_hr', '🪟', 'HR WS')}
-    ${machine(210, 224, 'corp_dc', '🗄️', 'DC')}
-    ${machine(278, 224, 'corp_fs', '💾', 'FileSrv')}
+    <rect x="560" y="530" width="80" height="70" rx="8" class="zone-box firewall" data-fw-open="provider-corp"></rect>
+    <text x="600" y="568" text-anchor="middle" font-size="28">🧱</text>
+    <text x="600" y="607" text-anchor="middle" class="zone-label">Firewall</text>
 
-    ${machine(622, 224, 'drone_relay', '📡', 'Relay')}
-    ${machine(690, 224, 'drone_plan', '💻', 'Planner')}
-    ${machine(758, 224, 'drone_archive', '🎞️', 'Archive')}
-
-    ${machine(384, 380, 'ot_hmi', '🧭', 'HMI')}
-    ${machine(450, 380, 'ot_hist', '📈', 'Historian')}
-    ${machine(516, 380, 'ot_gate', '🔌', 'Gateway')}
+    <text x="940" y="640" text-anchor="middle" font-size="42">🌍</text>
+    <text x="940" y="670" text-anchor="middle" class="zone-label">Internet</text>
   </svg>`;
 
   const initialZoom = Number(document.getElementById('mapZoom')?.value || 120) / 100;
@@ -322,14 +384,17 @@ function renderNetworkMap(access, links) {
   if (map) map.style.transform = `scale(${initialZoom})`;
 }
 
-function renderKillChain(killChain) {
+function renderKillChain(killChain, evidence = { maliciousIps: [], executionPaths: [] }) {
   const chain = document.getElementById('killChainPanel');
-  chain.innerHTML = killChain.stages.map((stage, i) => {
-    const unlocked = killChain.revealed.includes(stage);
-    const label = unlocked ? stage : '???';
-    const tag = unlocked ? 'found' : 'unknown';
-    return `<li class="kill-step schema-step ${unlocked ? 'unlocked' : 'locked'}"><span class="step-index">${i + 1}</span><span class="step-label">${label}</span><span class="question-tag ${tag}">${unlocked ? 'opened' : '? tag'}</span></li>`;
-  }).join('');
+  const clues = [...(evidence.maliciousIps || []), ...(evidence.executionPaths || [])];
+  chain.innerHTML = `
+    <div class="kill-flow">${killChain.stages.map((stage, i) => {
+      const unlocked = killChain.revealed.includes(stage);
+      const label = unlocked ? stage : '???';
+      const clue = unlocked && clues[i] ? clues[i] : (unlocked ? 'opened' : '? evidence');
+      return `<div class="flow-stage ${unlocked ? 'on' : 'off'}"><span class="flow-title">${label}</span><span class="flow-evidence">${clue}</span></div>${i < killChain.stages.length - 1 ? '<span class="flow-arrow">→</span>' : ''}`;
+    }).join('')}</div>
+  `;
 }
 
 function renderInventory(state, hostMap) {
@@ -356,6 +421,7 @@ function renderMalwarePanel(sightings, hostMap) {
 function renderOpsPanel(context, firewallLinks) {
   const related = firewallLinks.filter((l) => l.a === context.network || l.b === context.network);
   const cards = related.map((link) => `<article class="firewall-card ${link.status}"><div><strong>${link.id}</strong></div><div class="threat">${link.service} • ${link.status}</div><div class="malware-actions"><button type="button" data-fw-open="${link.id}">Open Firewall Investigation</button></div></article>`).join('');
+  const evidences = (window.__stateEvidence?.maliciousIps || []).join(', ');
   document.getElementById('opsPanel').innerHTML = `
     <article class="malware-card">
       <div><strong>🧪 Machine Forensics</strong></div>
@@ -365,6 +431,7 @@ function renderOpsPanel(context, firewallLinks) {
     <article class="malware-card">
       <div><strong>🔥 Firewall Investigation</strong></div>
       <div class="threat">Click a map firewall knob or open a related link below to solve route/log puzzle before blocking traffic.</div>
+      <div class="threat">Evidence hints for firewall/fileserver actions: ${evidences || 'No IOC IPs collected yet.'}</div>
       <div class="malware-panel">${cards || '<p class="threat">No nearby links for this machine.</p>'}</div>
     </article>
   `;
@@ -431,23 +498,47 @@ function openProcessLab(hostId, onProcessAction) {
   const scan = window.__getProcessScan?.(hostId);
   if (!scan) return;
   const rows = scan.processes.map((p) => `
-    <article class="process-card ${p.verdict}">
-      <div><strong>${p.name}</strong> <span class="status ${p.verdict === 'suspicious' ? 'active' : p.verdict === 'critical' ? 'contained' : 'eradicated'}">${p.verdict}</span></div>
-      <div class="threat">${p.functions[0]}</div>
-      <div class="malware-actions">
-        <button type="button" data-proc-host="${hostId}" data-proc-name="${p.name}" data-proc-action="analyze" data-proc-verdict="${p.verdict}">Analyze</button>
-        <button type="button" data-proc-host="${hostId}" data-proc-name="${p.name}" data-proc-action="block" data-proc-verdict="${p.verdict}">Block process</button>
-      </div>
-    </article>
+    <tr>
+      <td>${p.name}</td>
+      <td>${p.cpu || '-'}</td>
+      <td>${p.memory || '-'}</td>
+      <td>${p.network || '-'}</td>
+      <td><button type="button" data-proc-host="${hostId}" data-proc-name="${p.name}" data-proc-action="analyze" data-proc-verdict="${p.verdict}">Investigate</button></td>
+      <td><button type="button" data-proc-host="${hostId}" data-proc-name="${p.name}" data-proc-action="block" data-proc-verdict="${p.verdict}">Stop</button></td>
+    </tr>
   `).join('');
   modal.classList.remove('hidden');
   body.innerHTML = `
-    <strong>Process Analysis Lab: ${hostId}</strong>
+    <strong>Process List - ${hostId}</strong>
     <p class="machine-brief">${scan.prompt}</p>
-    <div class="proc-cmds">${scan.commands.map((c) => `<code>${shorten(c, 90)}</code>`).join('')}</div>
-    <div class="process-list">${rows || '<p>No process anomalies listed.</p>'}</div>
+    <table class="proc-table"><thead><tr><th>Name</th><th>CPU</th><th>Memory</th><th>Network</th><th></th><th></th></tr></thead><tbody>${rows}</tbody></table>
   `;
   if (onProcessAction) window.__procAction = onProcessAction;
+}
+
+function openMachineModal(hostId, nodeId) {
+  const modal = document.getElementById('analysisModal');
+  const body = document.getElementById('analysisBody');
+  const host = window.__machineMeta?.[hostId] || { id: hostId, role: 'machine', description: '' };
+  const customActions = MACHINE_ACTIONS[hostId] || [
+    { id: 'trace-route', label: 'Investigate network route', command: 'tracert 10.10.66.77' },
+    { id: 'aggressive-scan', label: 'Aggressive scan (high risk)', command: `nmap -p 1-65535 -T 4 ${hostId}` }
+  ];
+  const actionButtons = customActions.map((a) => `<button type="button" data-machine-host="${host.id}" data-machine-op="${a.id}" title="${escapeAttr(a.command)}">${a.label}</button>`).join('');
+  const actionCommands = customActions.map((a) => `<code>${a.command}</code>`).join('');
+  modal.classList.remove('hidden');
+  body.innerHTML = `
+    <strong>${host.id}</strong>
+    <p class="machine-brief"><strong>Purpose:</strong> ${host.role}</p>
+    <p class="threat">${host.description || 'Machine information unavailable.'}</p>
+    <p><strong>Actions</strong></p>
+    <div class="malware-actions">
+      <button type="button" data-machine-jump="${nodeId}">Open machine workspace</button>
+      <button type="button" data-open-process-lab="${host.id}">Process investigation</button>
+      ${actionButtons}
+    </div>
+    <div class="proc-cmds">${actionCommands}</div>
+  `;
 }
 
 function renderServiceWindows(network) {
@@ -458,6 +549,20 @@ function renderServiceWindows(network) {
 function renderGuidancePanel(checklist) {
   document.getElementById('guidancePanel').innerHTML = checklist.map((item) => `<li>${item}</li>`).join('');
 }
+
+function runMachineOperation(hostId, operation, onMachineOperation) {
+  if (!onMachineOperation) return;
+  const modal = document.getElementById('analysisModal');
+  const body = document.getElementById('analysisBody');
+  const result = onMachineOperation(hostId, operation);
+  modal.classList.remove('hidden');
+  body.innerHTML = `
+    <strong>Machine operation result</strong>
+    <p><code>${result?.command || 'n/a'}</code></p>
+    <p>${result?.text || 'No result'}</p>
+  `;
+}
+
 
 async function runTransition(text, fn, min = 1000, max = 2000) {
   const modal = document.getElementById('analysisModal');
@@ -473,18 +578,24 @@ async function runTransition(text, fn, min = 1000, max = 2000) {
 async function runProcessAction(onProcessAction, hostId, processName, action, verdict = 'benign') {
   const runner = onProcessAction || window.__procAction;
   if (!runner) return null;
-  if (action !== 'analyze') return runner(hostId, processName, action);
   const modal = document.getElementById('analysisModal');
   const body = document.getElementById('analysisBody');
+  if (action !== 'analyze') {
+    const stopped = runner(hostId, processName, action);
+    body.innerHTML = `<strong>Process stop result</strong><p>${stopped?.impact || `${processName} stopped.`}</p>`;
+    return stopped;
+  }
   modal.classList.remove('hidden');
   const [min, max] = verdict === 'suspicious' ? [5000, 10000] : verdict === 'critical' ? [5000, 7000] : [2000, 2500];
-  body.innerHTML = `<strong>Analyzing ${processName} on ${hostId} ...</strong><br/>Expected: ${Math.round(min / 1000)}-${Math.round(max / 1000)} sec`;
+  body.innerHTML = `<strong>Investigating ${processName} on ${hostId} ...</strong><br/>Expected: ${Math.round(min / 1000)}-${Math.round(max / 1000)} sec`;
   const wait = min + Math.floor(Math.random() * (max - min + 1));
   await new Promise((resolve) => setTimeout(resolve, wait));
   const result = runner(hostId, processName, action);
-  body.textContent = result
-    ? `${result.name}: ${result.verdict}. Functions: ${result.functions.join(', ')}.`
-    : `No data for ${processName}.`;
+  const evidenceText = result?.evidence
+    ? `<p>Gained evidences: ${result.evidence.maliciousIp || 'unknown IP'} ${result.evidence.executionPath ? `<br/>Execution path: ${result.evidence.executionPath}` : ''}</p>`
+    : '<p>Nothing interesting here...</p>';
+  body.innerHTML = `<strong>${result ? `${result.name}: ${result.verdict}` : 'No data'}</strong>${evidenceText}`;
+  return result;
 }
 
 function openSiteModal(title, hint, body) {

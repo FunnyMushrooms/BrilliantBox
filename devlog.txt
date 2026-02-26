@@ -84,3 +84,37 @@
 - Diversified process-analysis prompts by machine role (e.g., process flood on HR workstation, suspicious `calc.exe` on domain controller) to avoid repetitive text across hosts.
 - Improved analysis modal content support by switching to block container body and enabling modal scrolling for puzzle/process content.
 - Re-checked repository for `dental.png`: still not present, so exact Telegram/web flow comparison remains pending; implementation continues following devlog-first priority with interactive web flow enhancements.
+
+## Iteration 10
+- Reworked the visual network topology to match the requested layout more closely (top control chain, domain block, military block, center router, lower firewall/internet line) with the expected machine labels.
+- Changed machine interaction flow: clicking a machine on the map now opens a machine-information popup first, and users can then open the machine workspace or launch process investigation from that popup.
+- Rebuilt process investigation into a table-style process popup (Name/CPU/Memory/Network + Investigate/Stop actions) aligned with the provided reference.
+- Expanded process simulation with per-process CPU/memory/network data and investigation evidence output (malicious IP + execution path when relevant).
+- Wired evidence propagation into gameplay state and cyber kill-chain rendering so unlocked stages can display discovered evidence instead of only generic opened tags.
+- Added firewall/fileserver evidence hinting in the ops console so discovered IOC IPs can guide where to investigate next.
+- Stopping suspicious processes now returns explicit malicious-stop outcomes; stopping benign/critical processes returns impact messaging to reinforce service disruption risk.
+- Reviewed prompt-provided Dental flow image context again and kept web interaction alignment (map -> machine popup -> process popup -> evidence/decision). Telegram-specific flow still requires concrete in-repo spec if strict parity is required.
+
+## Iteration 11
+- Addressed follow-up feedback by adding machine-level command options that can impact other machines/networks, not only the current host/process.
+- Added machine popup actions for `Investigate network (tracert)` and `Scan machine aggressively (nmap)`:
+  - tracert-style investigation reveals routing-rule compromise evidence with low noise impact.
+  - aggressive nmap-style scan can trigger EDR lockout and degrade access across linked networks (collateral impact).
+- Extended process stop consequences to include cross-network collateral behavior:
+  - stopping critical legitimate processes can now propagate outages to neighboring networks.
+  - stopping suspicious malicious processes can interrupt lateral movement and may restore a linked degraded network.
+  - stopping benign processes now raises noise and can degrade dependent services in linked networks.
+- Enhanced investigation messaging so process evidence explicitly points operators toward linked zones for next steps.
+- Re-checked prompt-provided Dental flow context and aligned this iteration with the top-flow command tradeoff (`tracert` safer intel vs `nmap` EDR trigger) while keeping existing web-popup interaction model.
+
+## Iteration 12
+- Reworked Cyber Kill Chain rendering into an explicit flow-style pipeline with stage-to-stage arrows and per-stage evidence chips (instead of only list-like cards).
+- Added unique, device-specific machine actions for every host in provider/corp/ot/drone networks (not one generic pair for all machines).
+- Implemented host-specific operation logic in engine with realistic tradeoffs and cross-impact:
+  - corporate actions (mail-rule audit, Kerberos reset, ACL restore),
+  - provider actions (DNS poison flush, firewall hunt profile, proxy cache triage),
+  - OT actions (safe mode, historian recovery, substation isolation),
+  - UAV actions (relay key rotation, flight-plan rollback, archive package quarantine).
+- Expanded cross-network impact behavior so actions can degrade or recover linked network availability (e.g., OT isolation affecting corp, drone rollback pausing drone access, DNS flush restoring provider+corp reachability).
+- Preserved/extended command-first flow from Dental references by surfacing concrete command snippets directly inside machine modal action area.
+- Re-checked Dental context from prompt (no in-repo dental.png file still) and aligned this iteration with command-choice branches and consequence paths while keeping web popup UX.

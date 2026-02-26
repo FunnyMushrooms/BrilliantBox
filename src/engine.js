@@ -35,6 +35,10 @@ export class GameEngine {
       },
       malwareSightings: {},
       firewall: Object.fromEntries(FIREWALL_LINKS.map((l) => [l.id, 'allow'])),
+      evidence: {
+        maliciousIps: [],
+        executionPaths: []
+      },
       flags: { stoppedDetonation: false },
       penaltyArmed: false,
       outagePenaltyTicks: 0,
@@ -187,47 +191,55 @@ export class GameEngine {
 
   getProcessScan(hostId) {
     const lower = hostId.toLowerCase();
-    if (lower.includes('corp_hr')) {
+    if (lower.includes('corp-hr')) {
       return {
         prompt: 'HR workstation has 140+ background tasks. Is that normal HR software noise or hidden malware?',
         commands: ['Get-Process | Sort-Object CPU -Descending | Select -First 25', 'Get-ScheduledTask | ? TaskName -match "update|sync|hr"'],
         processes: [
-          { name: 'excel.exe', verdict: 'benign', functions: ['payroll macro workbook'] },
-          { name: 'powershell.exe', verdict: 'suspicious', functions: ['encoded startup command', 'credential scraping script'] },
-          { name: 'teams.exe', verdict: 'benign', functions: ['chat and meetings'] }
+          { name: 'excel.exe', verdict: 'benign', cpu: '4%', memory: '210MB', network: '1mbps', functions: ['payroll macro workbook'] },
+          {
+            name: 'instagram.exe',
+            verdict: 'suspicious',
+            cpu: '15%',
+            memory: '250MB',
+            network: '9mbps',
+            functions: ['unexpected upload burst', 'credential scraping script'],
+            evidence: { maliciousIp: '185.55.55.10', executionPath: '\\corp-fs-02\\public\\media\\instagram.exe' }
+          },
+          { name: 'teams.exe', verdict: 'benign', cpu: '3%', memory: '120MB', network: '2mbps', functions: ['chat and meetings'] }
         ]
       };
     }
-    if (lower.includes('corp_dc')) {
+    if (lower.includes('corp-dc')) {
       return {
         prompt: 'Domain controller process tree has an odd calc.exe launch under service context. Legit admin prank or compromise?',
         commands: ['Get-WinEvent -LogName Security -MaxEvents 200 | ? Message -match "calc.exe|service"', 'Get-CimInstance Win32_Process | Select Name,ParentProcessId,CommandLine'],
         processes: [
-          { name: 'lsass.exe', verdict: 'benign', functions: ['authentication authority process'] },
-          { name: 'calc.exe', verdict: 'suspicious', functions: ['unexpected GUI binary in server session', 'possible LOLBIN launch marker'] },
-          { name: 'dns.exe', verdict: 'benign', functions: ['domain DNS service'] }
+          { name: 'lsass.exe', verdict: 'benign', cpu: '3%', memory: '80MB', network: '0mbps', functions: ['authentication authority process'] },
+          { name: 'calc.exe', verdict: 'suspicious', cpu: '9%', memory: '65MB', network: '5mbps', functions: ['unexpected GUI binary in server session', 'possible LOLBIN launch marker'], evidence: { maliciousIp: '10.91.7.77', executionPath: 'C:\\ProgramData\\Tasks\\calc.exe' } },
+          { name: 'dns.exe', verdict: 'benign', cpu: '2%', memory: '56MB', network: '1mbps', functions: ['domain DNS service'] }
         ]
       };
     }
-    if (lower.includes('corp_fs') || lower.includes('provider')) {
+    if (lower.includes('corp-fs') || lower.includes('prov-')) {
       return {
         prompt: 'so many powershell.exe process, is that a new company policy?',
         commands: ['Get-Process | Sort-Object CPU -Descending | Select -First 20', 'Get-CimInstance Win32_Process | Select Name,ProcessId,CommandLine'],
         processes: [
-          { name: 'powershell.exe', verdict: 'suspicious', functions: ['download cradle', 'credential dump attempt', 'encoded command loader'] },
-          { name: 'svchost.exe', verdict: 'benign', functions: ['service host group: netsvcs'] },
-          { name: 'uav.exe', verdict: hostId.includes('drone') ? 'critical' : 'benign', functions: ['flight control uplink', 'telemetry marshaling'] }
+          { name: 'powershell.exe', verdict: 'suspicious', cpu: '12%', memory: '170MB', network: '8mbps', functions: ['download cradle', 'credential dump attempt', 'encoded command loader'], evidence: { maliciousIp: '104.23.201.7', executionPath: 'C:\\Users\\Public\\ps-loader.ps1' } },
+          { name: 'svchost.exe', verdict: 'benign', cpu: '3%', memory: '48MB', network: '1mbps', functions: ['service host group: netsvcs'] },
+          { name: 'uav.exe', verdict: hostId.includes('drone') ? 'critical' : 'benign', cpu: '10%', memory: '325MB', network: '4mbps', functions: ['flight control uplink', 'telemetry marshaling'] }
         ]
       };
     }
-    if (lower.includes('drone') || lower.includes('plan')) {
+    if (lower.includes('drone-') || lower.includes('plan')) {
       return {
         prompt: 'Telemetry jitter detected while UAV mission package is open.',
         commands: ['ps aux --sort=-%cpu | head -20', 'ss -plant | grep ESTAB'],
         processes: [
-          { name: 'uav.exe', verdict: 'critical', functions: ['flight stability controller', 'return-to-base safety handler'] },
-          { name: 'reverse_tunnel', verdict: 'suspicious', functions: ['reverse shell', 'beacon channel to C2'] },
-          { name: 'ffmpeg', verdict: 'benign', functions: ['video transcoding'] }
+          { name: 'uav.exe', verdict: 'critical', cpu: '14%', memory: '280MB', network: '6mbps', functions: ['flight stability controller', 'return-to-base safety handler'] },
+          { name: 'reverse_tunnel', verdict: 'suspicious', cpu: '11%', memory: '95MB', network: '10mbps', functions: ['reverse shell', 'beacon channel to C2'], evidence: { maliciousIp: '172.23.99.41', executionPath: '/tmp/.cache/rev_tunnel' } },
+          { name: 'ffmpeg', verdict: 'benign', cpu: '7%', memory: '100MB', network: '0mbps', functions: ['video transcoding'] }
         ]
       };
     }
@@ -236,9 +248,9 @@ export class GameEngine {
         prompt: 'PLC command queue includes unusual writes.',
         commands: ['modbus read 10.77.4.20:502 holding 40001 10', 'modbus write-test --dry-run --address 40110 --value 0'],
         processes: [
-          { name: 'scada-syncd', verdict: 'critical', functions: ['setpoint replication', 'safety trip thresholds'] },
-          { name: 'plc_writer', verdict: 'suspicious', functions: ['unauthorized coil writes', 'breaker state manipulation'] },
-          { name: 'historiand', verdict: 'benign', functions: ['trend archiving'] }
+          { name: 'scada-syncd', verdict: 'critical', cpu: '9%', memory: '190MB', network: '5mbps', functions: ['setpoint replication', 'safety trip thresholds'] },
+          { name: 'plc_writer', verdict: 'suspicious', cpu: '13%', memory: '150MB', network: '7mbps', functions: ['unauthorized coil writes', 'breaker state manipulation'], evidence: { maliciousIp: '185.17.44.9', executionPath: '/opt/scada/bin/plc_writer' } },
+          { name: 'historiand', verdict: 'benign', cpu: '2%', memory: '69MB', network: '0mbps', functions: ['trend archiving'] }
         ]
       };
     }
@@ -256,6 +268,16 @@ export class GameEngine {
     if (proc.verdict === 'suspicious') {
       this.state.score += 22;
       this.revealNextKillChainStage();
+      if (proc.evidence?.maliciousIp && !this.state.evidence.maliciousIps.includes(proc.evidence.maliciousIp)) {
+        this.state.evidence.maliciousIps.push(proc.evidence.maliciousIp);
+        this.state.inventory.push(`ioc-ip:${proc.evidence.maliciousIp}`);
+      }
+      if (proc.evidence?.executionPath && !this.state.evidence.executionPaths.includes(proc.evidence.executionPath)) {
+        this.state.evidence.executionPaths.push(proc.evidence.executionPath);
+        this.state.inventory.push(`ioc-path:${proc.evidence.executionPath}`);
+      }
+      const neighbors = this.getNeighborNetworks(this.getHostNetwork(hostId) || '').join(', ');
+      this.state.effectMessage = `Evidence found on ${hostId}: ${proc.evidence?.maliciousIp || 'new IOC'} ${proc.evidence?.executionPath || ''}. Check linked zones: ${neighbors || 'none'}.`;
     }
     return proc;
   }
@@ -263,18 +285,165 @@ export class GameEngine {
   blockProcess(hostId, processName) {
     const proc = this.getProcessScan(hostId).processes.find((p) => p.name === processName);
     if (!proc) return;
+    const network = this.getHostNetwork(hostId);
+    const neighbors = this.getNeighborNetworks(network || '');
     if (proc.verdict === 'critical') {
       this.state.score -= 70;
       this.state.noise = Math.min(10, this.state.noise + 2);
-      if (processName === 'uav.exe') this.state.access.drone = false;
-      if (hostId.includes('ot')) this.state.access.ot = false;
-      this.state.effectMessage = `Critical process ${processName} blocked on ${hostId}: service impact propagated across connected networks.`;
-      return;
+      if (network) this.state.access[network] = false;
+      const collateral = neighbors.slice(0, 1);
+      collateral.forEach((n) => { this.state.access[n] = false; });
+      this.state.effectMessage = `Critical process ${processName} blocked on ${hostId}: outage propagated to ${[network, ...collateral].filter(Boolean).join(', ')}.`;
+      return { process: processName, status: 'critical-stopped', malicious: false, impact: `Service outage risk increased. Collateral impact: ${collateral.join(', ') || 'local machine only'}.` };
     }
-    this.state.score += proc.verdict === 'suspicious' ? 26 : -6;
-    this.state.effectMessage = proc.verdict === 'suspicious'
-      ? `Blocked malicious process ${processName} on ${hostId}.`
-      : `${processName} looked legitimate; review before blocking next time.`;
+    if (proc.verdict === 'suspicious') {
+      this.state.score += 26;
+      const recovered = neighbors.find((n) => !this.state.access[n]);
+      if (recovered) this.state.access[recovered] = true;
+      this.state.effectMessage = `Blocked malicious process ${processName} on ${hostId}. Lateral movement to linked machines interrupted.`;
+      return {
+        process: processName,
+        status: 'malicious-stopped',
+        malicious: true,
+        impact: `Malicious execution chain interrupted.${recovered ? ` Restored access for ${recovered}.` : ''}`
+      };
+    }
+    this.state.score -= 6;
+    this.state.noise = Math.min(10, this.state.noise + 1);
+    const degraded = neighbors[0];
+    if (degraded) this.state.effectMessage = `${processName} looked legitimate; dependent service in ${degraded} degraded.`;
+    else this.state.effectMessage = `${processName} looked legitimate; review before blocking next time.`;
+    return {
+      process: processName,
+      status: 'benign-stopped',
+      malicious: false,
+      impact: `A legitimate process was stopped; ${degraded ? `${degraded} services may degrade too.` : 'local services may degrade.'}`
+    };
+  }
+
+
+  getHostNetwork(hostId) {
+    return this.seededHosts.hostMap.find((h) => h.id === hostId)?.network || null;
+  }
+
+  getNeighborNetworks(network) {
+    return FIREWALL_LINKS
+      .filter((l) => l.a === network || l.b === network)
+      .map((l) => (l.a === network ? l.b : l.a));
+  }
+
+  runMachineOperation(hostId, operation) {
+    const network = this.getHostNetwork(hostId);
+    if (!network) return { ok: false, text: 'Unknown machine operation target.' };
+
+    const loseNetwork = (n) => { if (n) this.state.access[n] = false; };
+    const recoverNetwork = (n) => { if (n) this.state.access[n] = true; };
+    const addEvidence = (ip, path) => {
+      if (ip && !this.state.evidence.maliciousIps.includes(ip)) this.state.evidence.maliciousIps.push(ip);
+      if (path && !this.state.evidence.executionPaths.includes(path)) this.state.evidence.executionPaths.push(path);
+    };
+
+    const op = {
+      'trace-route': () => {
+        this.state.score += 16;
+        this.state.noise = Math.max(0, this.state.noise - 1);
+        this.revealNextKillChainStage();
+        addEvidence(null, `route:${network}:tracert 10.10.66.77`);
+        return { ok: true, command: 'tracert 10.10.66.77', text: 'Router path is tampered. Evidence gained: network rules compromised.' };
+      },
+      'aggressive-scan': () => {
+        this.state.noise = Math.min(10, this.state.noise + 3);
+        this.state.score -= 24;
+        loseNetwork(network);
+        const impacted = this.getNeighborNetworks(network).slice(0, 1);
+        impacted.forEach(loseNetwork);
+        return { ok: true, command: `nmap -p 1-65535 -T 4 ${hostId}`, text: `EDR triggered. Access degraded in ${[network, ...impacted].join(' and ')}.` };
+      },
+
+      'audit-mail-rules': () => {
+        this.state.score += 18;
+        this.revealNextKillChainStage();
+        addEvidence('185.55.55.10', 'mail:corp-hr-01:forward-rule');
+        return { ok: true, command: 'Get-InboxRule -Mailbox hr@corp.local', text: 'Found malicious forwarding rule from HR mailbox to attacker node.' };
+      },
+      'reset-krbtgt': () => {
+        this.state.score += 12;
+        this.state.noise += 1;
+        recoverNetwork('corp');
+        loseNetwork('drone');
+        return { ok: true, command: 'Reset-KrbtgtKeys -Force', text: 'Domain tickets reset. Corp stabilizes, but drone mission auth must be re-established.' };
+      },
+      'restore-fileshare-acl': () => {
+        this.state.score += 22;
+        recoverNetwork('corp');
+        recoverNetwork('ot');
+        return { ok: true, command: 'icacls \corp-fs-02\shared /restore backup.acl', text: 'FileServer ACL restored. HR and OT historian sync can use shares again.' };
+      },
+
+      'flush-dns-poison': () => {
+        this.state.score += 18;
+        recoverNetwork('provider');
+        recoverNetwork('corp');
+        addEvidence('185.17.44.9', 'dns:prov-dns-01:poisoned-cache');
+        return { ok: true, command: 'rndc flush && rndc reload', text: 'Poisoned DNS cache removed. Public and corporate endpoints recover routing.' };
+      },
+      'enable-fw-hunt': () => {
+        this.state.score += 10;
+        this.state.firewall['provider-corp'] = 'monitor';
+        this.state.firewall['provider-drone'] = 'monitor';
+        return { ok: true, command: 'fwctl profile threat-hunt --mode monitor', text: 'Firewall moved to hunt mode on provider links; traffic kept alive for intel capture.' };
+      },
+      'proxy-cache-triage': () => {
+        this.state.score += 15;
+        addEvidence('104.23.201.7', 'proxy:prov-proxy-01:unsigned-package');
+        return { ok: true, command: 'proxyctl cache audit --top-talkers', text: 'Proxy cache reveals unsigned package fetches from suspicious CDN endpoint.' };
+      },
+
+      'ot-safe-mode': () => {
+        this.state.score += 8;
+        this.state.otRisk = Math.max(0, this.state.otRisk - 2);
+        loseNetwork('ot');
+        return { ok: true, command: 'scadactl set safety-mode on', text: 'ICS entered safety mode: turbine writes stopped, but OT services are temporarily unavailable.' };
+      },
+      'recover-historian-stream': () => {
+        this.state.score += 20;
+        recoverNetwork('ot');
+        recoverNetwork('corp');
+        addEvidence(null, 'ot-historian:replayed-gap-window');
+        return { ok: true, command: 'historiandiff --repair --window 4h', text: 'Historian telemetry repaired. Corp analytics and OT trend monitoring restored.' };
+      },
+      'isolate-substation-link': () => {
+        this.state.score += 6;
+        this.state.otRisk = Math.max(0, this.state.otRisk - 1);
+        loseNetwork('ot');
+        loseNetwork('corp');
+        return { ok: true, command: 'gatewayctl isolate-link --peer corp', text: 'Substation isolated from corp. Attack path interrupted, but corp-OT services are down.' };
+      },
+
+      'rotate-uav-keys': () => {
+        this.state.score += 18;
+        recoverNetwork('drone');
+        addEvidence('172.23.99.41', 'drone-relay:key-abuse');
+        return { ok: true, command: 'uavctl key-rotate --all-relays', text: 'Telemetry keys rotated. UAV channel recovers and hostile relay can no longer authenticate.' };
+      },
+      'rollback-flight-plan': () => {
+        this.state.score += 10;
+        this.state.noise = Math.min(10, this.state.noise + 1);
+        loseNetwork('drone');
+        return { ok: true, command: 'missionctl rollback --last-known-good', text: 'Flight plan rollback prevented malicious route updates, but active drone missions paused.' };
+      },
+      'quarantine-archive-packages': () => {
+        this.state.score += 14;
+        recoverNetwork('drone');
+        recoverNetwork('provider');
+        return { ok: true, command: 'archivectl quarantine --unsigned', text: 'Unsigned UAV packages quarantined. Drone archive sync recovered across provider relay.' };
+      }
+    }[operation];
+
+    if (!op) return { ok: false, text: 'Unsupported machine operation.' };
+    const result = op();
+    this.state.effectMessage = result.text;
+    return result;
   }
 
 
