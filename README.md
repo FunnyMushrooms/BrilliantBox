@@ -14,6 +14,14 @@ python -m http.server 8080
 3. Entry point is `index.html` in repo root.
 4. Open `https://funnymushrooms.github.io/BrilliantBox/`.
 
+## New interaction highlights
+- Larger clickable four-subnet network map with direct machine jump tiles.
+- Interactive firewall channels between networks (allow/block) with cascading availability impact.
+- Per-machine process analysis lab with realistic timing (simple ~2s, suspicious/malicious ~5-10s), triage, and block actions.
+- Visual map-first operations with clickable firewall knobs and SOC core (not text-only hub navigation).
+- Real-time outage penalties begin after 2 minutes if critical apps/channels remain unavailable.
+- Analyst mode includes Windows/Linux/SCADA-style command snippets (`Get-Process`, `cat /etc/passwd`, `modbus read ...`).
+
 ## Subpath safety
 All imports/requests use relative paths (`./src/...`, `./data/...`) so deployment under repository subpaths works.
 

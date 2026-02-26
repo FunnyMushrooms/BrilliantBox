@@ -41,6 +41,8 @@
         <div id="effectsText" class="effects"></div>
         <section id="nodeContext" class="node-context" aria-label="Machine-specific investigation hints"></section>
         <div id="choices" class="choices" role="listbox" aria-label="Available actions"></div>
+        <h3>Live Service Windows</h3>
+        <div id="serviceApps" class="malware-panel"></div>
       </main>
 
       <aside class="panel right">
@@ -50,11 +52,25 @@
         <div id="malwarePanel" class="malware-panel"></div>
         <h3>Cyber Kill Chain</h3>
         <ol id="killChainPanel" class="kill-chain"></ol>
+        <h3>Interactive Firewall</h3>
+        <div id="firewallPanel" class="malware-panel"></div>
+        <h3>Process Analysis Lab</h3>
+        <div id="processPanel" class="malware-panel"></div>
         <h3>Command Builder</h3>
         <div id="commandBuilder" class="cmd"></div>
+        <h3>What to Rectify</h3>
+        <ol id="guidancePanel" class="kill-chain"></ol>
         <h3>Leaderboard</h3>
         <ol id="leaderboard"></ol>
       </aside>
+    </div>
+
+    <div id="analysisModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Process analysis result">
+      <div class="modal-card">
+        <h3>Analysis Result</h3>
+        <p id="analysisBody">Analyzing...</p>
+        <button id="analysisCloseBtn" type="button">Close</button>
+      </div>
     </div>
 
     <footer class="panel footer">

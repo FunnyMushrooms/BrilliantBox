@@ -97,3 +97,51 @@ button { background: linear-gradient(180deg, #395792, #2f497d); border: 1px soli
   .app { grid-template-columns: 1fr; grid-template-rows: auto; }
   .left, .center, .right { min-height: auto; }
 }
+
+.subnet-svg { max-width: 520px; }
+.full-map .map-machine rect { transition: stroke .15s ease, transform .15s ease; }
+.full-map .map-machine:hover rect { stroke: #8ed3ff; transform: translateY(-1px); }
+
+.firewall-card.block { border-color: #ff8f8f; }
+.firewall-card.allow { border-color: #8fd7ff; }
+.process-card.suspicious { border-color: #ff7d7d; }
+.process-card.critical { border-color: #ffce71; }
+.process-card.benign { border-color: #8ef79d; }
+.process-list { display: grid; gap: 8px; }
+.proc-cmds { display: grid; gap: 4px; margin-bottom: 8px; }
+.proc-cmds code { background: rgba(9, 17, 35, .65); border: 1px dashed #5f7db9; border-radius: 8px; padding: 5px 7px; font-size: .74rem; color: #d6ebff; }
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(1, 6, 14, .68);
+  display: grid;
+  place-items: center;
+  z-index: 20;
+}
+.modal-card {
+  width: min(520px, 92vw);
+  background: linear-gradient(180deg, rgba(26, 42, 72, .98), rgba(18, 30, 55, .98));
+  border: 1px solid #5f87cf;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.choice-hint { border: 1px dashed #5b83d0; border-radius: 12px; padding: 10px; color: #b8dbff; background: #152748; }
+.soc-core { fill: #1e2b49; stroke: #7cd7ff; cursor: pointer; }
+.map-link { stroke: url(#linegrad); stroke-width: 3; }
+.segment { stroke-width: 2; }
+.segment.provider { fill: #223960; stroke: #7ec8ff; }
+.segment.corp { fill: #2b2b54; stroke: #caa8ff; }
+.segment.drone { fill: #1f3d3c; stroke: #84f7cc; }
+.segment.ot { fill: #3f3122; stroke: #ffcf84; }
+.full-map .map-machine { cursor: pointer; }
+.full-map .map-machine rect { fill: #172645; stroke: #577dc6; }
+.full-map .map-machine:hover rect { stroke: #9ed8ff; }
+.fw-knob { cursor: pointer; }
+.fw-knob circle { stroke: #89b4ff; stroke-width: 1.6; }
+.fw-knob.allow circle { fill: #1b384e; }
+.fw-knob.block circle { fill: #4d2525; }
+
+.site-preview { margin-top: 10px; border: 1px solid #5f87cf; border-radius: 10px; padding: 10px; background: #11223e; }
+.app-btn { width: 100%; text-align: left; }

@@ -46,7 +46,22 @@ async function start(mode = 'new') {
       if (game.state.sessionEnded) finalizeRun();
       rerender();
     },
-    onJumpNode: (nodeId) => window.__jumpNode(nodeId)
+    onJumpNode: (nodeId) => window.__jumpNode(nodeId),
+    onFirewallChange: (linkId, status) => {
+      game.setFirewallRule(linkId, status);
+      rerender();
+    },
+    onProcessAction: (hostId, processName, action) => {
+      if (action === 'analyze') {
+        const result = game.analyzeProcess(hostId, processName);
+        rerender();
+        return result;
+      }
+      game.blockProcess(hostId, processName);
+      if (game.state.sessionEnded) finalizeRun();
+      rerender();
+      return null;
+    }
   });
 
   startTimer();

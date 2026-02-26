@@ -4,44 +4,75 @@
       "id": "start",
       "type": "hub",
       "title": "SOC Command Bridge",
-      "text": "Four network segments are active. Time runs continuously while you pivot. Actions do not consume timer budget: investigate as much as possible before countdown ends.",
+      "text": "Four connected subnets (ICS, Military, Domain, Provider) are under one coordinated attack: phishing, ransomware, lateral movement, reverse tunnels, and backdoors. Time runs continuously while you pivot. After 2 minutes, unavailable public apps start applying score penalties every few seconds.",
       "commandPreview": "soc-bridge --mode cross-segment --timer realtime",
       "options": [
-        { "label": "Open Domain / Public Services", "next": "hub_provider", "timeCostSec": 10 },
-        { "label": "Open Corporate Domain", "next": "hub_corp", "timeCostSec": 10 },
-        { "label": "Open ICS / Power Grid", "next": "hub_ot", "timeCostSec": 10 },
-        { "label": "Open Military UAV Network", "next": "hub_drone", "timeCostSec": 10 },
-        { "label": "Run full cyber kill-chain assessment", "next": "final_assess", "timeCostSec": 10 }
+        {
+          "label": "Open Domain / Public Services",
+          "next": "hub_provider",
+          "timeCostSec": 10
+        },
+        {
+          "label": "Open Corporate Domain",
+          "next": "hub_corp",
+          "timeCostSec": 10
+        },
+        {
+          "label": "Open ICS / Power Grid",
+          "next": "hub_ot",
+          "timeCostSec": 10
+        },
+        {
+          "label": "Open Military UAV Network",
+          "next": "hub_drone",
+          "timeCostSec": 10
+        },
+        {
+          "label": "Run full cyber kill-chain assessment",
+          "next": "final_assess",
+          "timeCostSec": 10
+        }
       ]
     },
     "final_assess": {
       "id": "final_assess",
       "type": "choice",
       "title": "Full Kill-Chain Review",
-      "text": "Hidden kill-chain slots open as you collect malware/IOC evidence from machines. Decide whether to execute coordinated containment.",
+      "text": "Map each finding to cyber kill-chain stages and connected dependencies. Hidden kill-chain slots open as you collect malware/IOC evidence from logs, processes, files, and firewall interactions.",
       "commandPreview": "killchain-review --phase recon-to-impact --show-hidden",
       "options": [
         {
           "label": "Execute coordinated containment",
           "next": "win_node",
           "timeCostSec": 10,
-          "conditions": { "requiredFlags": { "ransomwareContained": true } },
+          "conditions": {
+            "requiredFlags": {
+              "ransomwareContained": true
+            }
+          },
           "effects": {
             "scoreDelta": 160,
-            "setFlags": { "stoppedDetonation": true }
+            "setFlags": {
+              "stoppedDetonation": true
+            }
           }
         },
         {
           "label": "Continue evidence hunt",
           "next": "start",
           "timeCostSec": 10,
-          "effects": { "scoreDelta": 12 }
+          "effects": {
+            "scoreDelta": 12
+          }
         },
         {
           "label": "Attempt rushed shutdown",
           "next": "end_node",
           "timeCostSec": 10,
-          "effects": { "scoreDelta": -120, "otRiskDelta": 3 }
+          "effects": {
+            "scoreDelta": -120,
+            "otRiskDelta": 3
+          }
         }
       ]
     },

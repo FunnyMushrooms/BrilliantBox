@@ -1,6 +1,12 @@
 import { getScoreBreakdown } from './scoring.js';
 
 const NETWORKS = ['provider', 'corp', 'ot', 'drone'];
+const FIREWALL_LINKS = [
+  { id: 'provider-corp', a: 'provider', b: 'corp', service: 'HTTPS/DNS feed' },
+  { id: 'corp-ot', a: 'corp', b: 'ot', service: 'SMB historian sync' },
+  { id: 'corp-drone', a: 'corp', b: 'drone', service: 'UAV mission package' },
+  { id: 'provider-drone', a: 'provider', b: 'drone', service: 'UAV live stream relay' }
+];
 
 export class GameEngine {
   constructor({ scenario, seededHosts, seed }) {
@@ -28,7 +34,10 @@ export class GameEngine {
         revealed: []
       },
       malwareSightings: {},
+      firewall: Object.fromEntries(FIREWALL_LINKS.map((l) => [l.id, 'allow'])),
       flags: { stoppedDetonation: false },
+      penaltyArmed: false,
+      outagePenaltyTicks: 0,
       sessionEnded: false,
       ending: null,
       effectMessage: ''
@@ -156,6 +165,113 @@ export class GameEngine {
     }
   }
 
+  getFirewallLinks() {
+    return FIREWALL_LINKS.map((link) => ({ ...link, status: this.state.firewall[link.id] || 'allow' }));
+  }
+
+  setFirewallRule(linkId, status) {
+    const link = FIREWALL_LINKS.find((l) => l.id === linkId);
+    if (!link || !['allow', 'block'].includes(status)) return;
+    this.state.firewall[linkId] = status;
+    if (status === 'block') {
+      this.state.score -= 8;
+      this.state.effectMessage = `Firewall blocked ${link.service} (${link.a} ↔ ${link.b}). Dependent apps may fail.`;
+    } else {
+      this.state.score += 4;
+      this.state.effectMessage = `Firewall restored ${link.service} (${link.a} ↔ ${link.b}).`;
+    }
+  }
+
+  getProcessScan(hostId) {
+    const lower = hostId.toLowerCase();
+    if (lower.includes('corp') || lower.includes('prov')) {
+      return {
+        prompt: 'so many powershell.exe process, is that a new company policy?',
+        commands: ['Get-Process | Sort-Object CPU -Descending | Select -First 20', 'Get-CimInstance Win32_Process | Select Name,ProcessId,CommandLine'],
+        processes: [
+          { name: 'powershell.exe', verdict: 'suspicious', functions: ['download cradle', 'credential dump attempt', 'encoded command loader'] },
+          { name: 'svchost.exe', verdict: 'benign', functions: ['service host group: netsvcs'] },
+          { name: 'uav.exe', verdict: hostId.includes('drone') ? 'critical' : 'benign', functions: ['flight control uplink', 'telemetry marshaling'] }
+        ]
+      };
+    }
+    if (lower.includes('drone') || lower.includes('plan')) {
+      return {
+        prompt: 'Telemetry jitter detected while UAV mission package is open.',
+        commands: ['ps aux --sort=-%cpu | head -20', 'ss -plant | grep ESTAB'],
+        processes: [
+          { name: 'uav.exe', verdict: 'critical', functions: ['flight stability controller', 'return-to-base safety handler'] },
+          { name: 'reverse_tunnel', verdict: 'suspicious', functions: ['reverse shell', 'beacon channel to C2'] },
+          { name: 'ffmpeg', verdict: 'benign', functions: ['video transcoding'] }
+        ]
+      };
+    }
+    if (lower.includes('ot')) {
+      return {
+        prompt: 'PLC command queue includes unusual writes.',
+        commands: ['modbus read 10.77.4.20:502 holding 40001 10', 'modbus write-test --dry-run --address 40110 --value 0'],
+        processes: [
+          { name: 'scada-syncd', verdict: 'critical', functions: ['setpoint replication', 'safety trip thresholds'] },
+          { name: 'plc_writer', verdict: 'suspicious', functions: ['unauthorized coil writes', 'breaker state manipulation'] },
+          { name: 'historiand', verdict: 'benign', functions: ['trend archiving'] }
+        ]
+      };
+    }
+    return {
+      prompt: 'Process baseline collected.',
+      commands: ['Get-Process', 'ps aux'],
+      processes: []
+    };
+  }
+
+  analyzeProcess(hostId, processName) {
+    const scan = this.getProcessScan(hostId);
+    const proc = scan.processes.find((p) => p.name === processName);
+    if (!proc) return null;
+    if (proc.verdict === 'suspicious') {
+      this.state.score += 22;
+      this.revealNextKillChainStage();
+    }
+    return proc;
+  }
+
+  blockProcess(hostId, processName) {
+    const proc = this.getProcessScan(hostId).processes.find((p) => p.name === processName);
+    if (!proc) return;
+    if (proc.verdict === 'critical') {
+      this.state.score -= 70;
+      this.state.noise = Math.min(10, this.state.noise + 2);
+      if (processName === 'uav.exe') this.state.access.drone = false;
+      if (hostId.includes('ot')) this.state.access.ot = false;
+      this.state.effectMessage = `Critical process ${processName} blocked on ${hostId}: service impact propagated across connected networks.`;
+      return;
+    }
+    this.state.score += proc.verdict === 'suspicious' ? 26 : -6;
+    this.state.effectMessage = proc.verdict === 'suspicious'
+      ? `Blocked malicious process ${processName} on ${hostId}.`
+      : `${processName} looked legitimate; review before blocking next time.`;
+  }
+
+
+  getRemediationChecklist() {
+    const checks = [];
+    const blocked = FIREWALL_LINKS.filter((l) => this.state.firewall[l.id] === 'block');
+    if (blocked.length) checks.push(`Restore required firewall channels: ${blocked.map((b) => b.id).join(', ')}.`);
+    else checks.push('Firewall channels healthy: keep only malicious flows blocked.');
+
+    const down = NETWORKS.filter((n) => !this.state.access[n]);
+    if (down.length) checks.push(`Network impact detected on: ${down.join(', ')}. Rectify service/process disruptions.`);
+    else checks.push('All subnets reachable from SOC.');
+
+    if (!this.state.flags.ransomwareContained) checks.push('Ransomware not contained yet: protect finance/shared files first.');
+    else checks.push('Ransomware containment confirmed.');
+
+    if (this.state.killChain.revealed.length < 5) checks.push('Kill-chain evidence incomplete: continue process/log/file analysis.');
+    else checks.push('Kill-chain map is becoming actionable for final containment.');
+
+    return checks;
+  }
+
   revealNextKillChainStage() {
     const next = this.state.killChain.stages.find((stage) => !this.state.killChain.revealed.includes(stage));
     if (next) this.state.killChain.revealed.push(next);
@@ -164,6 +280,22 @@ export class GameEngine {
   tick(seconds = 1) {
     if (this.state.sessionEnded) return;
     this.consumeTime(seconds);
+    this.applyOutagePenalties();
+  }
+
+  applyOutagePenalties() {
+    const elapsed = 600 - this.state.timeLeftSec;
+    if (elapsed >= 120) this.state.penaltyArmed = true;
+    if (!this.state.penaltyArmed) return;
+    const blockedLinks = FIREWALL_LINKS.filter((l) => this.state.firewall[l.id] === 'block').length;
+    const lockedNetworks = NETWORKS.filter((n) => !this.state.access[n]).length;
+    const outageWeight = blockedLinks + lockedNetworks;
+    if (outageWeight <= 0) return;
+    this.state.outagePenaltyTicks += 1;
+    if (this.state.outagePenaltyTicks % 5 === 0) {
+      this.state.score -= outageWeight * 2;
+      this.state.effectMessage = `Public apps unavailable for users: outage penalties applied (${outageWeight} impacted channels).`;
+    }
   }
 
   consumeTime(seconds) {

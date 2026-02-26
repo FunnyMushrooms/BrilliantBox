@@ -42,3 +42,27 @@
 - Added cyber kill-chain sidebar panel with hidden stages that unlock through IOC/malware discovery and malware-card actions (analyze/eradicate).
 - Expanded narrative outcomes for ransomware file-deletion prevention, compromised users, malicious config changes, UAV-in-flight disruption, ICS power/light disruption, and unavailable public sources.
 - Checked prompt-provided Dental image context and kept alignment around clickable web interaction flow; exact Telegram-specific pathing remains open for follow-up mapping discussion if a formal in-repo spec is added.
+
+## Iteration 6
+- Expanded map usability by enlarging the SVG topology, machine hit targets, and labels to improve clickability for fast machine pivots.
+- Added an interactive firewall panel showing connected inter-network channels (e.g., SMB historian sync, UAV stream relay) with allow/block controls and gameplay consequences.
+- Implemented process analysis lab per machine:
+  - Shows platform-specific process list with suspicious/critical verdicts.
+  - Added Analyze flow with 1.4s popup delay and function-level result details.
+  - Added Block action with cascading consequences (e.g., blocking `uav.exe` can drop UAV network access).
+- Added continuous outage penalties after 2 minutes when networks/channels remain disrupted, matching scenario pressure for unavailable public resources.
+- Expanded Analyst-mode command flavor for Windows/Linux/SCADA-style triage (`Get-Process`, `/etc/passwd`, modbus read samples).
+- Updated scenario narrative to emphasize one connected campaign (phishing, ransomware, lateral movement, reverse channels, backdoors) and kill-chain dependency mapping.
+- Re-checked repository for `dental.png`: still not present. Kept implementation aligned with requested web interactions and noted direct dental flow parity still requires the actual image/spec file.
+
+## Iteration 7
+- Reworked the network map into a more visual topology-first interaction: clickable machine icon tiles + clickable firewall knobs on links + clickable SOC core for final kill-chain review.
+- Removed dependence on text-only hub actions by guiding users to use the visual map for machine/network pivots.
+- Added transition popups (1-2 sec) for network/machine/firewall operations to simulate real analyst action latency.
+- Updated process analysis timing model:
+  - Benign/simple process analysis now ~2s.
+  - Suspicious/malicious executables now take 5-10s before verdict output.
+- Added richer “real-life” analyst command style across Windows/Linux/ICS playbooks (e.g., Get-Process, /etc/passwd review, Modbus read-only checks).
+- Added remediation guidance panel (“What to Rectify”) to explain what is working, what is broken, and what must be fixed next.
+- Added interactive “Live Service Windows” (public portal, banking, HR, ICS panel, UAV stream) as popup previews to investigate app symptoms and dependency hints.
+- Re-checked for `dental.png`: still not present in repository; implementation continued following devlog-first requirement and web interaction direction from user notes.
