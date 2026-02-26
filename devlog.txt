@@ -66,3 +66,21 @@
 - Added remediation guidance panel (“What to Rectify”) to explain what is working, what is broken, and what must be fixed next.
 - Added interactive “Live Service Windows” (public portal, banking, HR, ICS panel, UAV stream) as popup previews to investigate app symptoms and dependency hints.
 - Re-checked for `dental.png`: still not present in repository; implementation continued following devlog-first requirement and web interaction direction from user notes.
+
+## Iteration 8
+- Fixed startup modal bug that caused the analysis dialog to stay visible at page load (`.modal.hidden` now explicitly wins over `.modal`).
+- Repositioned the topology map into the center panel and expanded it into a larger spider-net schema with concentric web rings, enclave/subnet labeling, and machine nodes laid out by network zone.
+- Added map zoom control (80-165%) so participants can enlarge/reduce the network schema while investigating.
+- Reworked kill-chain visualization into a schema-like progression with unknown `???` question tags that turn into opened stages as findings reveal evidence.
+- Upgraded firewall interaction model from binary allow/block to a triage loop (`allow -> monitor -> block`) and surfaced guidance to prefer monitor mode when unsure, so participants can perform firewall tasks without immediately blocking traffic.
+- Kept existing process-analysis and malware flows intact while moving inventory/kill-chain to the left intel sidebar for better mission-board ergonomics.
+- Re-checked repository for `dental.png`; still not present, so exact top/bottom Telegram/Web flow parity cannot be fully verified. Current implementation follows devlog-first priority and extends web interaction flow with interactive schema/map/firewall elements.
+
+## Iteration 9
+- Removed static sidebar blocks for Interactive Firewall and Process Analysis Lab; replaced with a unified Interactive Ops Console card stack and map-driven investigations.
+- Changed firewall knob behavior: clicking a firewall link now opens an investigation workflow (route puzzle + huge log parsing + suspect IP inspection) before applying allow/monitor/block decisions.
+- Added per-link firewall mini-scenarios so participants can recover routes after attack and decide whether observed traffic is malicious or normal before blocking.
+- Kept process analysis optional: players now explicitly open process lab per machine via "Investigate Processes" action (not always-on in sidebar).
+- Diversified process-analysis prompts by machine role (e.g., process flood on HR workstation, suspicious `calc.exe` on domain controller) to avoid repetitive text across hosts.
+- Improved analysis modal content support by switching to block container body and enabling modal scrolling for puzzle/process content.
+- Re-checked repository for `dental.png`: still not present, so exact Telegram/web flow comparison remains pending; implementation continues following devlog-first priority with interactive web flow enhancements.

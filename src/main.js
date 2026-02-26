@@ -35,6 +35,8 @@ async function start(mode = 'new') {
     rerender();
   };
 
+  window.__getProcessScan = (hostId) => game.getProcessScan(hostId);
+
   bindUI({
     onChoose: (idx) => window.__choose(idx),
     onReplay: (m) => start(m),

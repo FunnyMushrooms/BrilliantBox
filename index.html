@@ -28,14 +28,25 @@
       </header>
 
       <aside class="panel left">
-        <h2>Network Map</h2>
-        <p>Click any machine tile to jump directly into that machine's unique task flow.</p>
-        <div id="networkMap" class="network-map"></div>
-        <button id="toggleMapBtn" type="button">Toggle Dev Map</button>
-        <div id="devMap" class="dev-map hidden"></div>
+        <h2>Intel / Inventory</h2>
+        <div id="inventory"></div>
+        <h3>Detected Malware</h3>
+        <div id="malwarePanel" class="malware-panel"></div>
+        <h3>Cyber Kill Chain</h3>
+        <ol id="killChainPanel" class="kill-chain kill-schema"></ol>
       </aside>
 
       <main class="panel center">
+        <section class="map-stage">
+          <div class="map-stage-header">
+            <h2>Network Operations Schema</h2>
+            <label class="zoom-control">Zoom
+              <input id="mapZoom" type="range" min="80" max="165" value="120" />
+            </label>
+          </div>
+          <p>Spider-net map: click enclaves, subnets, and machine nodes. Unknown kill-chain tags unlock as evidence is found.</p>
+          <div id="networkMap" class="network-map zoomable-map"></div>
+        </section>
         <h2 id="nodeTitle">Story</h2>
         <p id="nodeText"></p>
         <div id="effectsText" class="effects"></div>
@@ -46,16 +57,10 @@
       </main>
 
       <aside class="panel right">
-        <h2>Intel / Inventory</h2>
-        <div id="inventory"></div>
-        <h3>Detected Malware</h3>
-        <div id="malwarePanel" class="malware-panel"></div>
-        <h3>Cyber Kill Chain</h3>
-        <ol id="killChainPanel" class="kill-chain"></ol>
-        <h3>Interactive Firewall</h3>
-        <div id="firewallPanel" class="malware-panel"></div>
-        <h3>Process Analysis Lab</h3>
-        <div id="processPanel" class="malware-panel"></div>
+        <h3>Interactive Ops Console</h3>
+        <div id="opsPanel" class="malware-panel"></div>
+        <button id="toggleMapBtn" type="button">Toggle Dev Map</button>
+        <div id="devMap" class="dev-map hidden"></div>
         <h3>Command Builder</h3>
         <div id="commandBuilder" class="cmd"></div>
         <h3>What to Rectify</h3>
@@ -68,7 +73,7 @@
     <div id="analysisModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Process analysis result">
       <div class="modal-card">
         <h3>Analysis Result</h3>
-        <p id="analysisBody">Analyzing...</p>
+        <div id="analysisBody">Analyzing...</div>
         <button id="analysisCloseBtn" type="button">Close</button>
       </div>
     </div>
