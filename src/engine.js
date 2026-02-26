@@ -171,11 +171,14 @@ export class GameEngine {
 
   setFirewallRule(linkId, status) {
     const link = FIREWALL_LINKS.find((l) => l.id === linkId);
-    if (!link || !['allow', 'block'].includes(status)) return;
+    if (!link || !['allow', 'monitor', 'block'].includes(status)) return;
     this.state.firewall[linkId] = status;
     if (status === 'block') {
       this.state.score -= 8;
       this.state.effectMessage = `Firewall blocked ${link.service} (${link.a} ↔ ${link.b}). Dependent apps may fail.`;
+    } else if (status === 'monitor') {
+      this.state.score += 2;
+      this.state.effectMessage = `Firewall monitoring enabled for ${link.service} (${link.a} ↔ ${link.b}). Traffic stays up while SOC watches for indicators.`;
     } else {
       this.state.score += 4;
       this.state.effectMessage = `Firewall restored ${link.service} (${link.a} ↔ ${link.b}).`;
@@ -184,7 +187,29 @@ export class GameEngine {
 
   getProcessScan(hostId) {
     const lower = hostId.toLowerCase();
-    if (lower.includes('corp') || lower.includes('prov')) {
+    if (lower.includes('corp_hr')) {
+      return {
+        prompt: 'HR workstation has 140+ background tasks. Is that normal HR software noise or hidden malware?',
+        commands: ['Get-Process | Sort-Object CPU -Descending | Select -First 25', 'Get-ScheduledTask | ? TaskName -match "update|sync|hr"'],
+        processes: [
+          { name: 'excel.exe', verdict: 'benign', functions: ['payroll macro workbook'] },
+          { name: 'powershell.exe', verdict: 'suspicious', functions: ['encoded startup command', 'credential scraping script'] },
+          { name: 'teams.exe', verdict: 'benign', functions: ['chat and meetings'] }
+        ]
+      };
+    }
+    if (lower.includes('corp_dc')) {
+      return {
+        prompt: 'Domain controller process tree has an odd calc.exe launch under service context. Legit admin prank or compromise?',
+        commands: ['Get-WinEvent -LogName Security -MaxEvents 200 | ? Message -match "calc.exe|service"', 'Get-CimInstance Win32_Process | Select Name,ParentProcessId,CommandLine'],
+        processes: [
+          { name: 'lsass.exe', verdict: 'benign', functions: ['authentication authority process'] },
+          { name: 'calc.exe', verdict: 'suspicious', functions: ['unexpected GUI binary in server session', 'possible LOLBIN launch marker'] },
+          { name: 'dns.exe', verdict: 'benign', functions: ['domain DNS service'] }
+        ]
+      };
+    }
+    if (lower.includes('corp_fs') || lower.includes('provider')) {
       return {
         prompt: 'so many powershell.exe process, is that a new company policy?',
         commands: ['Get-Process | Sort-Object CPU -Descending | Select -First 20', 'Get-CimInstance Win32_Process | Select Name,ProcessId,CommandLine'],
@@ -256,7 +281,9 @@ export class GameEngine {
   getRemediationChecklist() {
     const checks = [];
     const blocked = FIREWALL_LINKS.filter((l) => this.state.firewall[l.id] === 'block');
+    const monitored = FIREWALL_LINKS.filter((l) => this.state.firewall[l.id] === 'monitor');
     if (blocked.length) checks.push(`Restore required firewall channels: ${blocked.map((b) => b.id).join(', ')}.`);
+    else if (monitored.length) checks.push(`Firewall channels monitored without outage: ${monitored.map((m) => m.id).join(', ')}.`);
     else checks.push('Firewall channels healthy: keep only malicious flows blocked.');
 
     const down = NETWORKS.filter((n) => !this.state.access[n]);
